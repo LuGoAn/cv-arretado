@@ -1,5 +1,6 @@
 const $ = (id) => document.getElementById(id);
 let atual = null;
+let eu = null;
 
 async function api(url, opcoes) {
   const r = await fetch(url, opcoes);
@@ -8,8 +9,30 @@ async function api(url, opcoes) {
     throw new Error('sessão expirou');
   }
   const dados = await r.json();
-  if (!r.ok) throw new Error(dados.erro || 'Erro');
+  if (!r.ok) {
+    const e = new Error(dados.erro || 'Erro');
+    e.codigo = dados.codigo;
+    throw e;
+  }
   return dados;
+}
+
+async function carregarPlano() {
+  eu = await api('/api/eu');
+  $('ola').textContent = 'Oi, ' + eu.nome.split(' ')[0];
+  const premium = eu.plano === 'premium';
+  $('selo-plano').textContent = premium ? 'Premium' : 'Grátis · seja Premium';
+  $('selo-plano').classList.toggle('premium', premium);
+  $('btn-carta').innerHTML = premium
+    ? 'Gerar carta de apresentação'
+    : 'Carta de apresentação <span class="cadeado">(Premium)</span>';
+
+  const acabou = !premium && eu.usadas_mes >= eu.limite;
+  $('uso').innerHTML = premium
+    ? 'Plano Premium: adaptações ilimitadas.'
+    : `Plano grátis: ${eu.usadas_mes} de ${eu.limite} adaptação usada este mês. <a href="/planos.html">Ver Premium</a>`;
+  $('bloqueio').classList.toggle('on', acabou);
+  $('adaptar').disabled = acabou;
 }
 
 function escapar(s) {
@@ -65,8 +88,15 @@ function mostrar(r) {
   $('dicas').innerHTML = r.dicas.map((d) => `<li>${escapar(d)}</li>`).join('');
   // o markdown vem da IA, então tira qualquer html cru antes de renderizar
   $('cv').innerHTML = marked.parse(escapar(r.curriculo_adaptado));
+  $('erro-carta').textContent = '';
+  mostrarCarta(r.carta);
   carregarHistorico();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function mostrarCarta(carta) {
+  $('area-carta').hidden = !carta;
+  $('carta').textContent = carta || '';
 }
 
 function novo() {
@@ -74,7 +104,36 @@ function novo() {
   $('resultado').classList.remove('on');
   $('formulario').style.display = '';
   carregarHistorico();
+  carregarPlano();
 }
+
+$('btn-carta').addEventListener('click', async () => {
+  if (eu.plano !== 'premium') {
+    location.href = '/planos.html';
+    return;
+  }
+  const b = $('btn-carta');
+  b.disabled = true;
+  b.textContent = 'Escrevendo a carta...';
+  $('erro-carta').textContent = '';
+  try {
+    const r = await api(`/api/historico/${atual.id}/carta`, { method: 'POST' });
+    atual.carta = r.carta;
+    mostrarCarta(r.carta);
+    $('area-carta').scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    $('erro-carta').textContent = err.message;
+  } finally {
+    b.disabled = false;
+    b.textContent = 'Gerar carta de apresentação';
+  }
+});
+
+$('copiar-carta').addEventListener('click', async () => {
+  await navigator.clipboard.writeText(atual.carta);
+  $('copiar-carta').textContent = 'Copiado!';
+  setTimeout(() => ($('copiar-carta').textContent = 'Copiar carta'), 1500);
+});
 
 $('arquivo').addEventListener('change', () => {
   const f = $('arquivo').files[0];
@@ -104,10 +163,10 @@ $('form').addEventListener('submit', async (e) => {
     const r = await api('/api/adaptar', { method: 'POST', body: fd });
     mostrar(r);
   } catch (err) {
-    $('erro').textContent = err.message;
+    if (err.codigo !== 'limite') $('erro').textContent = err.message;
   } finally {
-    $('adaptar').disabled = false;
     $('carregando').classList.remove('on');
+    carregarPlano();
   }
 });
 
@@ -132,7 +191,4 @@ $('sair').addEventListener('click', async () => {
   location.href = '/';
 });
 
-api('/api/eu').then((u) => {
-  $('ola').textContent = 'Oi, ' + u.nome.split(' ')[0];
-  carregarHistorico();
-});
+carregarPlano().then(carregarHistorico);

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Checkout - CV Arretado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <a href="/app.html" class="marca" style="text-decoration:none;color:inherit">CV <span>Arretado</span></a>
+    <a href="/planos.html" class="btn secundario" style="text-decoration:none">Voltar</a>
+  </header>
+
+  <main class="checkout">
+    <section class="painel">
+      <div class="simulacao">Pagamento simulado: nenhum valor é cobrado e nenhum dado de cartão é enviado.</div>
+      <h2>Pagamento</h2>
+
+      <div class="formas">
+        <button type="button" class="forma ativa" data-forma="cartao">Cartão</button>
+        <button type="button" class="forma" data-forma="pix">Pix</button>
+      </div>
+
+      <div id="forma-cartao">
+        <label>Número do cartão</label>
+        <input type="text" value="4242 4242 4242 4242" readonly>
+        <div class="duas">
+          <div>
+            <label>Validade</label>
+            <input type="text" value="12/30" readonly>
+          </div>
+          <div>
+            <label>CVV</label>
+            <input type="text" value="123" readonly>
+          </div>
+        </div>
+        <label>Nome no cartão</label>
+        <input type="text" id="nome-cartao" readonly>
+      </div>
+
+      <div id="forma-pix" hidden>
+        <div class="pix">
+          <div class="qr" aria-hidden="true"></div>
+          <p>QR Code de demonstração. Clica em confirmar pra simular o pagamento.</p>
+        </div>
+      </div>
+
+      <button class="btn" id="pagar" style="width:100%;margin-top:20px">Confirmar assinatura de R$ 14,90</button>
+      <div class="erro" id="erro"></div>
+    </section>
+
+    <aside class="painel resumo">
+      <h3>Resumo</h3>
+      <div class="linha"><span>CV Arretado Premium</span><span>R$ 14,90</span></div>
+      <div class="linha suave"><span>Cobrança</span><span>mensal</span></div>
+      <hr>
+      <div class="linha total"><span>Total hoje</span><span>R$ 14,90</span></div>
+      <ul class="dicas">
+        <li>Adaptações ilimitadas</li>
+        <li>Carta de apresentação pra cada vaga</li>
+        <li>Cancela quando quiser</li>
+      </ul>
+    </aside>
+
+    <section class="painel sucesso" id="sucesso" hidden>
+      <div class="check">✓</div>
+      <h2>Bem-vindo ao Premium!</h2>
+      <p class="sub">Agora você tem adaptações ilimitadas e carta de apresentação.</p>
+      <a href="/app.html" class="btn">Voltar pro app</a>
+    </section>
+  </main>
+
+  <script>
+    fetch('/api/eu').then((r) => {
+      if (r.status === 401) return (location.href = '/');
+      return r.json();
+    }).then((u) => {
+      if (u) document.getElementById('nome-cartao').value = u.nome.toUpperCase();
+    });
+
+    document.querySelectorAll('.forma').forEach((b) => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.forma').forEach((x) => x.classList.toggle('ativa', x === b));
+        document.getElementById('forma-cartao').hidden = b.dataset.forma !== 'cartao';
+        document.getElementById('forma-pix').hidden = b.dataset.forma !== 'pix';
+      });
+    });
+
+    document.getElementById('pagar').addEventListener('click', async () => {
+      const b = document.getElementById('pagar');
+      b.disabled = true;
+      b.textContent = 'Processando...';
+      // espera um pouco só pra parecer um pagamento de verdade
+      await new Promise((ok) => setTimeout(ok, 1500));
+      try {
+        const r = await fetch('/api/assinar', { method: 'POST' });
+        if (!r.ok) throw new Error((await r.json()).erro);
+        document.querySelectorAll('.checkout > .painel:not(.sucesso)').forEach((p) => (p.hidden = true));
+        document.getElementById('sucesso').hidden = false;
+      } catch (e) {
+        document.getElementById('erro').textContent = e.message || 'Deu ruim, tenta de novo';
+        b.disabled = false;
+        b.textContent = 'Confirmar assinatura de R$ 14,90';
+      }
+    });
+  </script>
+</body>
+</html>

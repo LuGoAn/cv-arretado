@@ -8,7 +8,7 @@ const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 const db = require('./src/db');
 const { hashSenha, conferirSenha } = require('./src/senha');
-const { adaptarCurriculo } = require('./src/groq');
+const { adaptarCurriculo, gerarCarta } = require('./src/groq');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -25,9 +25,27 @@ app.use(
 );
 app.use(express.static(path.join(__dirname, 'public')));
 
+const LIMITE_GRATIS = 1;
+
 function logado(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ erro: 'Faça login primeiro' });
   next();
+}
+
+function statusPlano(userId) {
+  const u = db.prepare('SELECT nome, plano, premium_desde FROM usuarios WHERE id = ?').get(userId);
+  const { total } = db
+    .prepare(
+      "SELECT COUNT(*) AS total FROM adaptacoes WHERE usuario_id = ? AND strftime('%Y-%m', criado_em) = strftime('%Y-%m', 'now')"
+    )
+    .get(userId);
+  return {
+    nome: u.nome,
+    plano: u.plano,
+    premium_desde: u.premium_desde,
+    usadas_mes: total,
+    limite: u.plano === 'premium' ? null : LIMITE_GRATIS,
+  };
 }
 
 app.post('/api/cadastro', (req, res) => {
@@ -67,11 +85,37 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/eu', logado, (req, res) => {
-  res.json({ id: req.session.userId, nome: req.session.nome });
+  const u = db.prepare('SELECT id FROM usuarios WHERE id = ?').get(req.session.userId);
+  // banco do render zera em todo deploy, então a sessão pode apontar pra usuário que não existe mais
+  if (!u) {
+    return req.session.destroy(() => res.status(401).json({ erro: 'Faça login de novo' }));
+  }
+  res.json({ id: req.session.userId, ...statusPlano(req.session.userId) });
+});
+
+// simulação: não cobra nada, só troca o plano
+app.post('/api/assinar', logado, (req, res) => {
+  db.prepare("UPDATE usuarios SET plano = 'premium', premium_desde = CURRENT_TIMESTAMP WHERE id = ?").run(
+    req.session.userId
+  );
+  res.json({ ok: true, ...statusPlano(req.session.userId) });
+});
+
+app.post('/api/cancelar', logado, (req, res) => {
+  db.prepare("UPDATE usuarios SET plano = 'gratis', premium_desde = NULL WHERE id = ?").run(req.session.userId);
+  res.json({ ok: true, ...statusPlano(req.session.userId) });
 });
 
 app.post('/api/adaptar', logado, upload.single('arquivo'), async (req, res) => {
   try {
+    const plano = statusPlano(req.session.userId);
+    if (plano.limite !== null && plano.usadas_mes >= plano.limite) {
+      return res.status(402).json({
+        erro: 'Você já usou sua adaptação grátis deste mês. Assina o Premium pra continuar.',
+        codigo: 'limite',
+      });
+    }
+
     const vaga = (req.body.vaga || '').trim();
     const cargo = (req.body.cargo || '').trim();
     let curriculo = (req.body.texto || '').trim();
@@ -111,21 +155,46 @@ app.post('/api/adaptar', logado, upload.single('arquivo'), async (req, res) => {
 
 app.get('/api/historico', logado, (req, res) => {
   const itens = db
-    .prepare('SELECT id, cargo, nota, criado_em FROM adaptacoes WHERE usuario_id = ? ORDER BY id DESC LIMIT 50')
+    .prepare('SELECT id, cargo, nota, criado_em FROM adaptacoes WHERE usuario_id = ? AND apagado = 0 ORDER BY id DESC LIMIT 50')
     .all(req.session.userId);
   res.json(itens);
 });
 
 app.get('/api/historico/:id', logado, (req, res) => {
   const item = db
-    .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ?')
+    .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
     .get(req.params.id, req.session.userId);
   if (!item) return res.status(404).json({ erro: 'Não achei' });
-  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, ...JSON.parse(item.resultado) });
+  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, carta: item.carta, ...JSON.parse(item.resultado) });
+});
+
+app.post('/api/historico/:id/carta', logado, async (req, res) => {
+  try {
+    if (statusPlano(req.session.userId).plano !== 'premium') {
+      return res.status(402).json({ erro: 'Carta de apresentação é do plano Premium', codigo: 'premium' });
+    }
+    const item = db
+      .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
+      .get(req.params.id, req.session.userId);
+    if (!item) return res.status(404).json({ erro: 'Não achei' });
+
+    const r = JSON.parse(item.resultado);
+    const carta = await gerarCarta({
+      nome: req.session.nome,
+      cargo: item.cargo,
+      vaga: item.vaga,
+      curriculo: r.curriculo_adaptado,
+    });
+    db.prepare('UPDATE adaptacoes SET carta = ? WHERE id = ?').run(carta, item.id);
+    res.json({ carta });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ erro: e.message || 'Não consegui gerar a carta' });
+  }
 });
 
 app.delete('/api/historico/:id', logado, (req, res) => {
-  db.prepare('DELETE FROM adaptacoes WHERE id = ? AND usuario_id = ?').run(req.params.id, req.session.userId);
+  db.prepare('UPDATE adaptacoes SET apagado = 1 WHERE id = ? AND usuario_id = ?').run(req.params.id, req.session.userId);
   res.json({ ok: true });
 });
 

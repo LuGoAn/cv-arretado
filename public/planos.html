@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planos - CV Arretado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <a href="/app.html" class="marca" style="text-decoration:none;color:inherit">CV <span>Arretado</span></a>
+    <a href="/app.html" class="btn secundario" style="text-decoration:none">Voltar</a>
+  </header>
+
+  <main class="pagina-planos">
+    <h1>Escolhe seu plano</h1>
+    <p class="sub" id="aviso">Aplica pra mais vagas com currículo certo pra cada uma.</p>
+
+    <div class="planos">
+      <div class="plano">
+        <h2>Grátis</h2>
+        <div class="preco">R$ 0</div>
+        <ul>
+          <li>1 adaptação por mês</li>
+          <li>Nota de encaixe e palavras-chave</li>
+          <li>Baixar em PDF</li>
+        </ul>
+        <button class="btn secundario" disabled id="btn-gratis">Seu plano atual</button>
+      </div>
+
+      <div class="plano destaque">
+        <div class="fita">Mais escolhido</div>
+        <h2>Premium</h2>
+        <div class="preco">R$ 14,90<small>/mês</small></div>
+        <ul>
+          <li><strong>Adaptações ilimitadas</strong></li>
+          <li><strong>Carta de apresentação</strong> gerada pra cada vaga</li>
+          <li>Nota de encaixe e palavras-chave</li>
+          <li>Histórico de todas as versões</li>
+        </ul>
+        <a href="/checkout.html" class="btn" id="btn-premium">Assinar Premium</a>
+      </div>
+    </div>
+
+    <p class="uso" id="area-cancelar" hidden>
+      Premium desde <span id="desde"></span>. <a href="#" id="cancelar">Cancelar assinatura</a>
+    </p>
+  </main>
+
+  <script>
+    fetch('/api/eu').then((r) => {
+      if (r.status === 401) return (location.href = '/');
+      return r.json();
+    }).then((u) => {
+      if (!u) return;
+      if (u.plano === 'premium') {
+        document.getElementById('btn-gratis').textContent = 'Grátis';
+        const b = document.getElementById('btn-premium');
+        b.textContent = 'Seu plano atual';
+        b.removeAttribute('href');
+        b.classList.add('desligado');
+        document.getElementById('area-cancelar').hidden = false;
+        document.getElementById('desde').textContent = new Date(u.premium_desde.replace(' ', 'T') + 'Z').toLocaleDateString('pt-BR');
+      } else if (u.usadas_mes >= u.limite) {
+        document.getElementById('aviso').textContent = 'Você já usou sua adaptação grátis deste mês. Com o Premium não tem limite.';
+      }
+    });
+
+    document.getElementById('cancelar').addEventListener('click', async (e) => {
+      e.preventDefault();
+      if (!confirm('Cancelar o Premium e voltar pro plano grátis?')) return;
+      await fetch('/api/cancelar', { method: 'POST' });
+      location.reload();
+    });
+  </script>
+</body>
+</html>

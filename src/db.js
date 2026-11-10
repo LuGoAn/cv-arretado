@@ -28,4 +28,15 @@ db.exec(`
   );
 `);
 
+// colunas que entraram depois; o try é pro caso do banco já ter elas
+for (const sql of [
+  "ALTER TABLE usuarios ADD COLUMN plano TEXT NOT NULL DEFAULT 'gratis'",
+  'ALTER TABLE usuarios ADD COLUMN premium_desde TEXT',
+  'ALTER TABLE adaptacoes ADD COLUMN carta TEXT',
+  // apagar só esconde, senão a pessoa apaga e ganha outra adaptação grátis
+  'ALTER TABLE adaptacoes ADD COLUMN apagado INTEGER NOT NULL DEFAULT 0',
+]) {
+  try { db.exec(sql); } catch {}
+}
+
 module.exports = db;

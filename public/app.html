@@ -13,6 +13,7 @@
     <div class="marca">CV <span>Arretado</span></div>
     <div class="usuario">
       <span id="ola"></span>
+      <a href="/planos.html" class="selo-plano" id="selo-plano" style="text-decoration:none"></a>
       <button class="btn secundario" id="sair">Sair</button>
     </div>
   </header>
@@ -53,6 +54,12 @@
             <div class="carregando" id="carregando"><div class="giro"></div> A IA tá trabalhando, segura aí...</div>
           </div>
           <div class="erro" id="erro"></div>
+          <div class="uso" id="uso"></div>
+          <div class="bloqueio" id="bloqueio">
+            <strong>Sua adaptação grátis do mês já foi.</strong>
+            No Premium você adapta quantas vezes quiser e ainda ganha carta de apresentação pra cada vaga.
+            <br><a href="/planos.html" class="btn">Ver o Premium</a>
+          </div>
         </form>
       </section>
 
@@ -90,10 +97,18 @@
         <div class="acoes">
           <button class="btn" id="baixar">Baixar em PDF</button>
           <button class="btn secundario" id="copiar">Copiar texto</button>
+          <button class="btn secundario" id="btn-carta">Gerar carta de apresentação</button>
           <button class="btn secundario" id="apagar">Apagar</button>
         </div>
+        <div class="erro" id="erro-carta"></div>
 
         <article class="cv" id="cv"></article>
+
+        <div id="area-carta" hidden>
+          <label>Carta de apresentação</label>
+          <div class="carta" id="carta"></div>
+          <div class="acoes"><button class="btn secundario" id="copiar-carta">Copiar carta</button></div>
+        </div>
       </section>
     </div>
   </main>

@@ -21,48 +21,44 @@ Responda SOMENTE com um JSON válido neste formato:
   "dicas": ["dicas práticas do que a pessoa pode estudar ou incluir, se for verdade, para ficar mais forte na vaga"]
 }`;
 
+const PROMPT_CARTA = `Você escreve cartas de apresentação curtas para candidatos a vagas no Brasil.
+Regras:
+- Use só informações do currículo. Não invente nada.
+- 3 ou 4 parágrafos curtos, tom profissional mas humano, sem clichê exagerado.
+- Comece com "Olá, equipe de recrutamento," e termine com "Atenciosamente," e o nome da pessoa.
+- Ligue as experiências da pessoa com o que a vaga pede.
+- Responda só com o texto da carta, sem título e sem markdown.`;
+
 // a groq aposenta modelo sem avisar muito, então tenta em ordem até um funcionar
 const MODELOS_RESERVA = ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
 
-async function chamarGroq(model, mensagens) {
-  return fetch(URL_GROQ, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      temperature: 0.4,
-      response_format: { type: 'json_object' },
-      messages: mensagens,
-    }),
-  });
-}
-
-async function adaptarCurriculo({ curriculo, vaga, cargo }) {
+async function perguntarGroq(mensagens, { json = false } = {}) {
   if (!process.env.GROQ_API_KEY) {
     throw new Error('GROQ_API_KEY não configurada');
   }
-
-  const mensagens = [
-    { role: 'system', content: PROMPT_SISTEMA },
-    {
-      role: 'user',
-      content: `CARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO ORIGINAL:\n${curriculo}`,
-    },
-  ];
 
   const modelos = [...new Set([process.env.GROQ_MODEL, ...MODELOS_RESERVA].filter(Boolean))];
   let resp;
   let ultimoErro = '';
 
-  for (const modelo of modelos) {
-    resp = await chamarGroq(modelo, mensagens);
+  for (const model of modelos) {
+    resp = await fetch(URL_GROQ, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model,
+        temperature: 0.4,
+        ...(json ? { response_format: { type: 'json_object' } } : {}),
+        messages: mensagens,
+      }),
+    });
     if (resp.ok) break;
     ultimoErro = await resp.text();
     if (!ultimoErro.includes('model_not_found') && !ultimoErro.includes('decommissioned')) break;
-    console.warn(`modelo ${modelo} indisponível, tentando o próximo`);
+    console.warn(`modelo ${model} indisponível, tentando o próximo`);
   }
 
   if (!resp.ok) {
@@ -70,11 +66,24 @@ async function adaptarCurriculo({ curriculo, vaga, cargo }) {
   }
 
   const dados = await resp.json();
-  const conteudo = dados.choices?.[0]?.message?.content || '{}';
+  return dados.choices?.[0]?.message?.content || '';
+}
+
+async function adaptarCurriculo({ curriculo, vaga, cargo }) {
+  const conteudo = await perguntarGroq(
+    [
+      { role: 'system', content: PROMPT_SISTEMA },
+      {
+        role: 'user',
+        content: `CARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO ORIGINAL:\n${curriculo}`,
+      },
+    ],
+    { json: true }
+  );
 
   let json;
   try {
-    json = JSON.parse(conteudo);
+    json = JSON.parse(conteudo || '{}');
   } catch {
     throw new Error('A IA não devolveu um JSON válido, tenta de novo');
   }
@@ -90,4 +99,15 @@ async function adaptarCurriculo({ curriculo, vaga, cargo }) {
   };
 }
 
-module.exports = { adaptarCurriculo };
+async function gerarCarta({ nome, cargo, vaga, curriculo }) {
+  const texto = await perguntarGroq([
+    { role: 'system', content: PROMPT_CARTA },
+    {
+      role: 'user',
+      content: `NOME: ${nome}\nCARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO:\n${curriculo}`,
+    },
+  ]);
+  return texto.trim();
+}
+
+module.exports = { adaptarCurriculo, gerarCarta };

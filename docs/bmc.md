@@ -36,7 +36,7 @@ Validação: conversar com colegas e conhecidos que estão buscando estágio ou 
 
 ## Fontes de receita
 
-- Freemium: 3 adaptações grátis por mês
+- Freemium: 1 adaptação grátis por mês (já funciona no MVP)
 - Plano mensal (R$ 14,90) com adaptações ilimitadas, carta de apresentação e modelos de PDF
 - Pacote avulso (R$ 9,90 por 10 adaptações) pra quem só usa numa fase de busca
 - Plano institucional pra faculdades (preço por aluno)
