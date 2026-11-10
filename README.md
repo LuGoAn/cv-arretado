@@ -10,7 +10,7 @@ Projeto da disciplina de IA Generativa. O modelo de negócio (BMC) está em [doc
 
 - Node.js + Express
 - SQLite (o `node:sqlite` que já vem no Node 22.13+), guarda usuários e histórico
-- Groq (Llama 3.3 70B) pra adaptação
+- Groq (GPT-OSS 120B, com outros modelos de reserva) pra adaptação
 - HTML, CSS e JS puro no front
 
 ## Rodando

@@ -21,34 +21,52 @@ Responda SOMENTE com um JSON válido neste formato:
   "dicas": ["dicas práticas do que a pessoa pode estudar ou incluir, se for verdade, para ficar mais forte na vaga"]
 }`;
 
-async function adaptarCurriculo({ curriculo, vaga, cargo }) {
-  if (!process.env.GROQ_API_KEY) {
-    throw new Error('GROQ_API_KEY não configurada no .env');
-  }
+// a groq aposenta modelo sem avisar muito, então tenta em ordem até um funcionar
+const MODELOS_RESERVA = ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
 
-  const resp = await fetch(URL_GROQ, {
+async function chamarGroq(model, mensagens) {
+  return fetch(URL_GROQ, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
     },
     body: JSON.stringify({
-      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
+      model,
       temperature: 0.4,
       response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: PROMPT_SISTEMA },
-        {
-          role: 'user',
-          content: `CARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO ORIGINAL:\n${curriculo}`,
-        },
-      ],
+      messages: mensagens,
     }),
   });
+}
+
+async function adaptarCurriculo({ curriculo, vaga, cargo }) {
+  if (!process.env.GROQ_API_KEY) {
+    throw new Error('GROQ_API_KEY não configurada');
+  }
+
+  const mensagens = [
+    { role: 'system', content: PROMPT_SISTEMA },
+    {
+      role: 'user',
+      content: `CARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO ORIGINAL:\n${curriculo}`,
+    },
+  ];
+
+  const modelos = [...new Set([process.env.GROQ_MODEL, ...MODELOS_RESERVA].filter(Boolean))];
+  let resp;
+  let ultimoErro = '';
+
+  for (const modelo of modelos) {
+    resp = await chamarGroq(modelo, mensagens);
+    if (resp.ok) break;
+    ultimoErro = await resp.text();
+    if (!ultimoErro.includes('model_not_found') && !ultimoErro.includes('decommissioned')) break;
+    console.warn(`modelo ${modelo} indisponível, tentando o próximo`);
+  }
 
   if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`Groq respondeu ${resp.status}: ${txt.slice(0, 300)}`);
+    throw new Error(`Groq respondeu ${resp.status}: ${ultimoErro.slice(0, 300)}`);
   }
 
   const dados = await resp.json();
