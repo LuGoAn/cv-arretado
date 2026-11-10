@@ -1,0 +1,21 @@
+{
+  "name": "cv-arretado",
+  "version": "0.1.0",
+  "description": "Adapta seu currículo pra cada vaga usando IA",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "1.1.1"
+  }
+}

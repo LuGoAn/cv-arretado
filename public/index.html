@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV Arretado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="tela-login">
+    <section class="login-lado">
+      <div class="marca">CV <span>Arretado</span></div>
+      <div>
+        <h1>Seu currículo do jeito que a vaga pede.</h1>
+        <p>Manda o PDF, cola a descrição da vaga e a IA reescreve seu currículo destacando o que você já fez e combina com a vaga. Sem inventar nada.</p>
+      </div>
+      <small>MVP feito pra aula de IA Generativa</small>
+    </section>
+
+    <section class="login-form">
+      <div class="cartao">
+        <div class="abas">
+          <button type="button" class="ativa" data-aba="login">Entrar</button>
+          <button type="button" data-aba="cadastro">Criar conta</button>
+        </div>
+
+        <form id="form">
+          <div id="campo-nome" hidden>
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" autocomplete="name">
+          </div>
+          <label for="email">Email</label>
+          <input type="email" id="email" required autocomplete="email">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required minlength="6" autocomplete="current-password">
+          <button class="btn" id="enviar">Entrar</button>
+          <div class="erro" id="erro"></div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="login.js"></script>
+</body>
+</html>

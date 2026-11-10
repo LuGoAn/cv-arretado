@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CV Arretado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <div class="marca">CV <span>Arretado</span></div>
+    <div class="usuario">
+      <span id="ola"></span>
+      <button class="btn secundario" id="sair">Sair</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="historico">
+      <h3>Suas adaptações</h3>
+      <button class="btn secundario" id="nova" style="width:100%;margin-bottom:10px">+ Nova</button>
+      <ul id="lista"></ul>
+    </aside>
+
+    <div>
+      <section class="painel" id="formulario">
+        <h2>Adaptar currículo</h2>
+        <p class="sub">Manda seu currículo e a vaga que você quer. A IA ajusta o texto pra vaga.</p>
+
+        <form id="form">
+          <div class="duas">
+            <div>
+              <label>Seu currículo</label>
+              <label class="upload" id="area-upload">
+                <input type="file" id="arquivo" accept="application/pdf">
+                <span id="nome-arquivo">Clica aqui pra escolher o PDF</span>
+              </label>
+              <p class="ou">ou cola o texto</p>
+              <textarea id="texto" placeholder="Cola o texto do seu currículo aqui"></textarea>
+            </div>
+            <div>
+              <label for="cargo">Cargo da vaga</label>
+              <input type="text" id="cargo" placeholder="Ex: Desenvolvedor Front-end Júnior">
+              <label for="vaga">Descrição da vaga</label>
+              <textarea id="vaga" required placeholder="Cola aqui a descrição completa da vaga: requisitos, atividades, diferenciais..." style="min-height:228px"></textarea>
+            </div>
+          </div>
+
+          <div class="acoes">
+            <button class="btn" id="adaptar">Adaptar currículo</button>
+            <div class="carregando" id="carregando"><div class="giro"></div> A IA tá trabalhando, segura aí...</div>
+          </div>
+          <div class="erro" id="erro"></div>
+        </form>
+      </section>
+
+      <section class="painel" id="resultado">
+        <h2 id="res-titulo">Resultado</h2>
+        <p class="sub" id="res-resumo"></p>
+
+        <div class="notas">
+          <div class="nota">
+            <div class="num" id="nota-antes">0</div>
+            <div class="rot">Encaixe do currículo original</div>
+            <div class="barra"><div id="barra-antes"></div></div>
+          </div>
+          <div class="nota depois">
+            <div class="num" id="nota-depois">0</div>
+            <div class="rot">Encaixe depois da adaptação</div>
+            <div class="barra"><div id="barra-depois"></div></div>
+          </div>
+        </div>
+
+        <div class="duas">
+          <div>
+            <label>Palavras-chave que você já tem</label>
+            <div class="tags" id="encontradas"></div>
+          </div>
+          <div>
+            <label>O que a vaga pede e não aparece</label>
+            <div class="tags" id="faltando"></div>
+          </div>
+        </div>
+
+        <label>Dicas</label>
+        <ul class="dicas" id="dicas"></ul>
+
+        <div class="acoes">
+          <button class="btn" id="baixar">Baixar em PDF</button>
+          <button class="btn secundario" id="copiar">Copiar texto</button>
+          <button class="btn secundario" id="apagar">Apagar</button>
+        </div>
+
+        <article class="cv" id="cv"></article>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
