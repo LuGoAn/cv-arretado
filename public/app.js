@@ -21,8 +21,8 @@ async function carregarPlano() {
   eu = await api('/api/eu');
   $('ola').textContent = 'Oi, ' + eu.nome.split(' ')[0];
   const premium = eu.plano === 'premium';
-  $('selo-plano').textContent = premium ? 'Premium' : 'Plano grátis';
-  $('selo-plano').classList.toggle('premium', premium);
+  $('plano-atual').innerHTML = premium ? 'Plano <span class="grifo">Premium</span>' : 'Plano grátis';
+  $('upgrade').hidden = premium;
   $('btn-carta').innerHTML = premium
     ? 'Gerar carta de apresentação'
     : 'Carta de apresentação <span class="cadeado">(Premium)</span>';
