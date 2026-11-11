@@ -146,7 +146,7 @@ app.post('/api/adaptar', logado, upload.single('arquivo'), async (req, res) => {
       )
       .run(req.session.userId, cargo, vaga, curriculo, JSON.stringify(resultado), resultado.nota_adaptado);
 
-    res.json({ id: Number(r.lastInsertRowid), cargo, ...resultado });
+    res.json({ id: Number(r.lastInsertRowid), cargo, curriculo_original: curriculo, ...resultado });
   } catch (e) {
     console.error(e);
     res.status(500).json({ erro: e.message || 'Deu ruim na adaptação' });
@@ -165,7 +165,7 @@ app.get('/api/historico/:id', logado, (req, res) => {
     .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
     .get(req.params.id, req.session.userId);
   if (!item) return res.status(404).json({ erro: 'Não achei' });
-  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, carta: item.carta, ...JSON.parse(item.resultado) });
+  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, carta: item.carta, curriculo_original: item.curriculo_original, ...JSON.parse(item.resultado) });
 });
 
 app.post('/api/historico/:id/carta', logado, async (req, res) => {

@@ -80,13 +80,17 @@ function mostrar(r) {
   $('res-titulo').textContent = r.cargo || 'Resultado';
   $('res-resumo').textContent = r.resumo;
   $('nota-antes').textContent = r.nota;
-  $('barra-antes').style.width = r.nota + '%';
   animarNota(r.nota, r.nota_adaptado);
-  $('encontradas').innerHTML = r.palavras_encontradas.map((p) => `<span class="tag">${escapar(p)}</span>`).join('') || '<small>nenhuma</small>';
-  $('faltando').innerHTML = r.palavras_faltando.map((p) => `<span class="tag falta">${escapar(p)}</span>`).join('') || '<small>nenhuma</small>';
+  $('encontradas').innerHTML = r.palavras_encontradas.map((p) => `<mark>${escapar(p)}</mark>`).join('') || 'nenhuma';
+  $('faltando').innerHTML = r.palavras_faltando.map((p) => `<mark class="falta">${escapar(p)}</mark>`).join('') || 'nada, tá completo';
   $('dicas').innerHTML = r.dicas.map((d) => `<li>${escapar(d)}</li>`).join('');
   // o markdown vem da IA, então tira qualquer html cru antes de renderizar
   $('cv').innerHTML = marked.parse(escapar(r.curriculo_adaptado));
+  $('cv-original').textContent = r.curriculo_original || '';
+  const chaves = [...r.palavras_encontradas, ...r.palavras_faltando];
+  grifar($('cv'), chaves);
+  grifar($('cv-original'), chaves);
+  trocarDoc('adaptado');
   $('erro-carta').textContent = '';
   mostrarCarta(r.carta);
   carregarHistorico();
@@ -96,23 +100,59 @@ function mostrar(r) {
 // a nota adaptada sobe a partir da original, pra mostrar o ganho
 function animarNota(de, ate) {
   const num = $('nota-depois');
-  const barra = $('barra-depois');
   if (matchMedia('(prefers-reduced-motion: reduce)').matches || ate <= de) {
     num.textContent = ate;
-    barra.style.width = ate + '%';
     return;
   }
   const inicio = performance.now();
   const duracao = 900;
   function passo(agora) {
     const t = Math.min((agora - inicio) / duracao, 1);
-    const v = Math.round(de + (ate - de) * (1 - Math.pow(1 - t, 3)));
-    num.textContent = v;
-    barra.style.width = v + '%';
+    num.textContent = Math.round(de + (ate - de) * (1 - Math.pow(1 - t, 3)));
     if (t < 1) requestAnimationFrame(passo);
   }
   requestAnimationFrame(passo);
 }
+
+// passa marca-texto nas palavras da vaga que aparecem no texto
+function grifar(el, palavras) {
+  const lista = palavras.filter((p) => p && p.length > 1).sort((a, b) => b.length - a.length);
+  if (!lista.length) return;
+  const re = new RegExp(`(${lista.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  const nos = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) nos.push(walker.currentNode);
+  for (const no of nos) {
+    if (!re.test(no.nodeValue)) continue;
+    re.lastIndex = 0;
+    const frag = document.createDocumentFragment();
+    no.nodeValue.split(re).forEach((pedaco, i) => {
+      if (!pedaco) return;
+      if (i % 2) {
+        const m = document.createElement('mark');
+        m.textContent = pedaco;
+        frag.appendChild(m);
+      } else {
+        frag.appendChild(document.createTextNode(pedaco));
+      }
+    });
+    no.replaceWith(frag);
+  }
+}
+
+function trocarDoc(qual) {
+  document.querySelectorAll('.abas-doc button').forEach((b) => {
+    const ativa = b.dataset.doc === qual;
+    b.classList.toggle('ativa', ativa);
+    b.setAttribute('aria-selected', ativa);
+  });
+  $('cv').hidden = qual !== 'adaptado';
+  $('cv-original').hidden = qual !== 'original';
+}
+
+document.querySelectorAll('.abas-doc button').forEach((b) => {
+  b.addEventListener('click', () => trocarDoc(b.dataset.doc));
+});
 
 function mostrarCarta(carta) {
   $('area-carta').hidden = !carta;

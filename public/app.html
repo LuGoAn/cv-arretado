@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CV Arretado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Ultra&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="topo-wrap"><div class="faixa-chita" aria-hidden="true"></div>
+  <div class="topo-wrap">
   <header class="topo">
-    <a href="/app.html" class="marca">CV Arretado</a>
+    <a href="/app.html" class="marca"><span class="grifo">CV Arretado</span></a>
     <div class="usuario">
       <span id="ola"></span>
       <a href="/planos.html" class="selo-plano" id="selo-plano"></a>
@@ -34,7 +34,7 @@
         <form id="form">
           <div class="duas">
             <div>
-              <label>Seu currículo</label>
+              <span class="rotulo">Seu currículo</span>
               <label class="upload" id="area-upload">
                 <input type="file" id="arquivo" accept="application/pdf">
                 <span id="nome-arquivo">Clica aqui pra escolher o PDF</span>
@@ -46,7 +46,7 @@
               <label for="cargo">Cargo da vaga</label>
               <input type="text" id="cargo" placeholder="Ex: Desenvolvedor Front-end Júnior">
               <label for="vaga">Descrição da vaga</label>
-              <textarea id="vaga" required placeholder="Cola aqui a descrição completa da vaga: requisitos, atividades, diferenciais..." style="min-height:228px"></textarea>
+              <textarea id="vaga" required placeholder="Cola aqui a descrição completa da vaga: requisitos, atividades, diferenciais..." style="min-height:232px"></textarea>
             </div>
           </div>
 
@@ -65,35 +65,30 @@
       </section>
 
       <section class="painel" id="resultado">
-        <h2 id="res-titulo">Resultado</h2>
-        <p class="sub" id="res-resumo"></p>
-
-        <div class="notas">
-          <div class="nota">
-            <div class="num" id="nota-antes">0</div>
-            <div class="rot">Encaixe do currículo original</div>
-            <div class="barra"><div id="barra-antes"></div></div>
+        <div class="resultado-topo">
+          <div>
+            <h2 id="res-titulo">Resultado</h2>
+            <p class="sub" id="res-resumo"></p>
           </div>
-          <div class="seta" aria-hidden="true">&rarr;</div>
-          <div class="nota depois">
-            <div class="num" id="nota-depois">0</div>
-            <div class="rot">Encaixe depois da adaptação</div>
-            <div class="barra"><div id="barra-depois"></div></div>
+          <div class="notas">
+            <div class="nota">
+              <div class="num" id="nota-antes">0</div>
+              <div class="rot">antes</div>
+            </div>
+            <div class="seta" aria-hidden="true">&rarr;</div>
+            <div class="nota depois">
+              <div class="num"><span id="nota-depois">0</span></div>
+              <div class="rot">depois, de 100</div>
+            </div>
           </div>
         </div>
 
-        <div class="duas">
-          <div>
-            <label>Palavras-chave que você já tem</label>
-            <div class="tags" id="encontradas"></div>
-          </div>
-          <div>
-            <label>O que a vaga pede e não aparece</label>
-            <div class="tags" id="faltando"></div>
-          </div>
+        <div class="palavras">
+          <p><span class="rotulo">Você já tem:</span> <span id="encontradas"></span></p>
+          <p><span class="rotulo">A vaga pede e não aparece:</span> <span id="faltando"></span></p>
         </div>
 
-        <label>Dicas</label>
+        <span class="rotulo">Dicas</span>
         <ul class="dicas" id="dicas"></ul>
 
         <div class="acoes">
@@ -104,11 +99,19 @@
         </div>
         <div class="erro" id="erro-carta"></div>
 
-        <article class="cv" id="cv"></article>
+        <div class="documento">
+          <div class="abas-doc" role="tablist">
+            <button type="button" class="ativa" data-doc="adaptado" role="tab">Adaptado</button>
+            <button type="button" data-doc="original" role="tab">Original</button>
+          </div>
+          <article class="folha doc cv" id="cv"></article>
+          <article class="folha doc cv original" id="cv-original" hidden></article>
+          <p class="legenda-grifo">Grifado em amarelo: palavras da vaga que aparecem no currículo.</p>
+        </div>
 
         <div id="area-carta" hidden>
-          <label>Carta de apresentação</label>
-          <div class="carta" id="carta"></div>
+          <span class="rotulo" style="margin-top:28px">Carta de apresentação</span>
+          <div class="folha doc carta" id="carta"></div>
           <div class="acoes"><button class="btn secundario" id="copiar-carta">Copiar carta</button></div>
         </div>
       </section>

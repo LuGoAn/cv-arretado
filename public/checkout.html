@@ -5,18 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Checkout - CV Arretado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Ultra&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="topo-wrap"><div class="faixa-chita" aria-hidden="true"></div>
+  <div class="topo-wrap">
   <header class="topo">
-    <a href="/app.html" class="marca">CV Arretado</a>
+    <a href="/app.html" class="marca"><span class="grifo">CV Arretado</span></a>
     <a href="/planos.html" class="btn secundario">Voltar</a>
   </header></div>
 
   <main class="checkout">
-    <section class="painel">
+    <section class="folha">
       <div class="simulacao">Pagamento simulado: nenhum valor é cobrado e nenhum dado de cartão é enviado.</div>
       <h2>Pagamento</h2>
 
@@ -53,7 +53,7 @@
       <div class="erro" id="erro"></div>
     </section>
 
-    <aside class="painel resumo">
+    <aside class="folha resumo">
       <h3>Resumo</h3>
       <div class="linha"><span>CV Arretado Premium</span><span>R$ 14,90</span></div>
       <div class="linha suave"><span>Cobrança</span><span>mensal</span></div>
@@ -66,7 +66,7 @@
       </ul>
     </aside>
 
-    <section class="painel sucesso" id="sucesso" hidden>
+    <section class="folha sucesso" id="sucesso" hidden>
       <div class="check">✓</div>
       <h2>Bem-vindo ao Premium!</h2>
       <p class="sub">Agora você tem adaptações ilimitadas e carta de apresentação.</p>
@@ -99,7 +99,7 @@
       try {
         const r = await fetch('/api/assinar', { method: 'POST' });
         if (!r.ok) throw new Error((await r.json()).erro);
-        document.querySelectorAll('.checkout > .painel:not(.sucesso)').forEach((p) => (p.hidden = true));
+        document.querySelectorAll('.checkout > .folha:not(.sucesso)').forEach((p) => (p.hidden = true));
         document.getElementById('sucesso').hidden = false;
       } catch (e) {
         document.getElementById('erro').textContent = e.message || 'Deu ruim, tenta de novo';
