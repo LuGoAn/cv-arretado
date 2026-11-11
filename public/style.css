@@ -167,6 +167,9 @@ textarea { resize: vertical; min-height: 150px; }
   margin: 0 auto;
   padding: 32px 24px 56px;
 }
+.layout > * { min-width: 0; }
+.cv, .carta, .dicas { overflow-wrap: anywhere; }
+.cv pre { white-space: pre-wrap; }
 
 .historico h3 { font-size: 1rem; margin: 4px 0 12px; }
 .historico .btn { width: 100%; margin-bottom: 14px; }
@@ -231,7 +234,8 @@ textarea { resize: vertical; min-height: 150px; }
 .palavras { margin: 24px 0 8px; line-height: 2.1; }
 .palavras p { margin: 0; }
 .palavras .rotulo { display: inline; margin: 0 8px 0 0; }
-.palavras mark { margin-right: 6px; font-weight: 600; white-space: nowrap; }
+/* a IA às vezes manda frase inteira como palavra-chave, então tem que poder quebrar */
+.palavras mark { margin-right: 6px; font-weight: 600; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 
 .dicas { padding-left: 20px; margin: 4px 0 0; max-width: 70ch; }
 .dicas li { margin-bottom: 4px; }
