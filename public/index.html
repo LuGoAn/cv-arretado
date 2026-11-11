@@ -168,9 +168,31 @@
       document.querySelectorAll('a[href="/entrar.html#cadastro"]').forEach((a) => (a.href = '/app.html'));
     });
 
+    const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // o smooth do navegador demora demais em distância longa, então faz na mão com tempo fixo
+    document.querySelectorAll('a[href^="#"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        const alvo = document.querySelector(a.getAttribute('href'));
+        if (!alvo) return;
+        e.preventDefault();
+        const de = scrollY;
+        const ate = alvo.getBoundingClientRect().top + scrollY - 16;
+        history.pushState(null, '', a.getAttribute('href'));
+        if (reduzir) return scrollTo(0, ate);
+        const inicio = performance.now();
+        const duracao = 450;
+        (function passo(agora) {
+          const t = Math.min((agora - inicio) / duracao, 1);
+          const k = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+          scrollTo(0, de + (ate - de) * k);
+          if (t < 1) requestAnimationFrame(passo);
+        })(inicio);
+      });
+    });
+
     // os placares sobem quando a comparação aparece na tela
     const placares = document.querySelectorAll('.placar');
-    const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
     function contar(el) {
       const ate = Number(el.dataset.ate);
       if (reduzir) return (el.textContent = ate);
