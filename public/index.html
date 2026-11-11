@@ -3,17 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CV Arretado</title>
+  <title>CV Arretado - seu currículo do jeito que a vaga pede</title>
+  <meta name="description" content="Manda seu currículo e a vaga. A IA reescreve destacando o que você já fez e combina com a vaga, sem inventar nada.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cv-arretado.onrender.com/">
+  <meta property="og:title" content="CV Arretado">
+  <meta property="og:description" content="Seu currículo do jeito que a vaga pede. A IA adapta o texto pra cada vaga, sem inventar nada.">
+  <meta property="og:image" content="https://cv-arretado.onrender.com/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="tela-login">
-    <section class="login-lado">
-      <div class="marca"><span class="grifo">CV Arretado</span></div>
-      <h1>Seu currículo do jeito que a vaga pede.</h1>
-      <p>Manda o PDF, cola a descrição da vaga e a IA reescreve seu currículo destacando o que você já fez e combina com a vaga. Sem inventar nada.</p>
+<body class="landing">
+  <div class="topo-wrap">
+  <header class="topo">
+    <a href="/" class="marca"><span class="grifo">CV Arretado</span></a>
+    <nav class="usuario">
+      <a href="#como" class="nav-link">Como funciona</a>
+      <a href="#planos" class="nav-link">Planos</a>
+      <a href="/entrar.html" class="btn secundario" id="nav-entrar">Entrar</a>
+      <a href="/entrar.html#cadastro" class="btn" id="nav-criar">Criar conta</a>
+    </nav>
+  </header></div>
+
+  <main>
+    <section class="hero">
+      <div class="hero-texto">
+        <h1>Seu currículo do jeito que a <span class="grifo">vaga pede.</span></h1>
+        <p>Manda seu currículo, cola a descrição da vaga e a IA reescreve o texto destacando o que você já fez e combina com ela. Sem inventar experiência.</p>
+        <div class="acoes">
+          <a href="/entrar.html#cadastro" class="btn grande">Adaptar meu currículo</a>
+          <a href="#antes-depois" class="btn secundario grande">Ver um exemplo</a>
+        </div>
+        <p class="nota-hero">A primeira adaptação do mês é grátis. Não pede cartão.</p>
+      </div>
 
       <div class="folha doc exemplo" aria-hidden="true">
         <div class="nome">Maria Souza</div>
@@ -28,31 +55,144 @@
       </div>
     </section>
 
-    <section class="login-form">
-      <div class="cartao">
-        <h2 id="titulo-form">Bem-vindo de volta</h2>
-        <p class="sub" id="sub-form">Entra pra ver suas adaptações.</p>
-        <div class="abas">
-          <button type="button" class="ativa" data-aba="login">Entrar</button>
-          <button type="button" data-aba="cadastro">Criar conta</button>
-        </div>
+    <section class="faixa" id="antes-depois">
+      <div class="faixa-dentro">
+        <h2>O mesmo currículo, antes e depois</h2>
+        <p class="sub">Vaga de Desenvolvedor Front-end Júnior. A Maria não ganhou nenhuma experiência nova, só passou a contar direito o que já tinha.</p>
 
-        <form id="form">
-          <div id="campo-nome" hidden>
-            <label for="nome">Nome</label>
-            <input type="text" id="nome" autocomplete="name">
+        <div class="comparacao">
+          <div class="lado-comp">
+            <div class="cab-comp">
+              <span class="rotulo">Antes</span>
+              <span class="placar" data-ate="42">0</span>
+            </div>
+            <div class="folha doc mini">
+              <div class="secao">Experiência</div>
+              <ul>
+                <li>Ajudei a atualizar o site da loja em HTML e CSS</li>
+                <li>Lista de Tarefas - app de tarefas em React</li>
+                <li>Portfólio pessoal no GitHub Pages</li>
+              </ul>
+              <div class="secao">Habilidades</div>
+              <p>HTML, CSS, JavaScript, React (básico), Git e GitHub, Figma (básico), Excel</p>
+            </div>
           </div>
-          <label for="email">Email</label>
-          <input type="email" id="email" required autocomplete="email">
-          <label for="senha">Senha</label>
-          <input type="password" id="senha" required minlength="6" autocomplete="current-password">
-          <button class="btn" id="enviar">Entrar</button>
-          <div class="erro" id="erro"></div>
-        </form>
+
+          <div class="lado-comp">
+            <div class="cab-comp">
+              <span class="rotulo">Depois</span>
+              <span class="placar alto" data-ate="78">0</span>
+            </div>
+            <div class="folha doc mini">
+              <div class="secao">Experiência</div>
+              <ul>
+                <li>Atualizei páginas do site da loja usando <mark>HTML e CSS</mark></li>
+                <li>Desenvolvi um app de tarefas em <mark>React</mark> com os dados salvos no navegador</li>
+                <li>Versionei meus projetos com <mark>Git</mark> e publiquei o portfólio no GitHub Pages</li>
+              </ul>
+              <div class="secao">Habilidades</div>
+              <p><mark>HTML, CSS e JavaScript</mark>, <mark>React</mark>, <mark>Git</mark> e GitHub, <mark>Figma</mark>, Excel</p>
+            </div>
+          </div>
+        </div>
+        <p class="legenda-grifo">Nota de encaixe com a vaga, de 0 a 100. Grifado: palavras da vaga.</p>
       </div>
     </section>
-  </div>
 
-  <script src="login.js"></script>
+    <section class="secao-landing" id="como">
+      <h2>Como funciona</h2>
+      <ol class="passos">
+        <li>
+          <span class="num-passo">1</span>
+          <h3>Manda o currículo</h3>
+          <p>Em PDF ou colando o texto. Dá pra reaproveitar o último que você mandou.</p>
+        </li>
+        <li>
+          <span class="num-passo">2</span>
+          <h3>Cola a vaga</h3>
+          <p>A descrição completa, com requisitos e diferenciais. É dela que saem as palavras-chave.</p>
+        </li>
+        <li>
+          <span class="num-passo">3</span>
+          <h3>Recebe a versão da vaga</h3>
+          <p>Com nota antes e depois, o que falta, dicas e o texto pronto pra revisar, editar e baixar.</p>
+        </li>
+      </ol>
+      <div class="garantia">
+        <strong>Não inventa nada.</strong>
+        A IA só pode reorganizar e reescrever o que já está no seu currículo. Se a vaga pede algo que você não tem, aparece em "o que falta", e não no texto.
+      </div>
+    </section>
+
+    <section class="secao-landing" id="planos">
+      <h2>Planos</h2>
+      <div class="planos">
+        <div class="plano folha">
+          <h3>Grátis</h3>
+          <div class="preco">R$ 0</div>
+          <ul>
+            <li>1 adaptação por mês</li>
+            <li>Nota de encaixe e palavras-chave</li>
+            <li>Copiar o texto do currículo</li>
+          </ul>
+          <a href="/entrar.html#cadastro" class="btn secundario">Criar conta grátis</a>
+        </div>
+        <div class="plano folha">
+          <h3><span class="grifo">Premium</span></h3>
+          <div class="preco">R$ 14,90<small>/mês</small></div>
+          <ul>
+            <li><strong>Adaptações ilimitadas</strong></li>
+            <li><strong>Carta de apresentação</strong> pra cada vaga</li>
+            <li><strong>Baixar em PDF</strong> em 3 modelos</li>
+            <li>Histórico de todas as versões</li>
+          </ul>
+          <a href="/entrar.html#cadastro" class="btn">Começar</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-final">
+      <h2>Tem uma vaga aberta aí?</h2>
+      <p>Leva uns 15 segundos pra adaptar.</p>
+      <a href="/entrar.html#cadastro" class="btn grande">Adaptar meu currículo</a>
+    </section>
+  </main>
+
+  <script>
+    fetch('/api/eu').then((r) => {
+      if (!r.ok) return;
+      const entrar = document.getElementById('nav-entrar');
+      entrar.textContent = 'Ir pro app';
+      entrar.href = '/app.html';
+      document.getElementById('nav-criar').hidden = true;
+      document.querySelectorAll('a[href="/entrar.html#cadastro"]').forEach((a) => (a.href = '/app.html'));
+    });
+
+    // os placares sobem quando a comparação aparece na tela
+    const placares = document.querySelectorAll('.placar');
+    const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function contar(el) {
+      const ate = Number(el.dataset.ate);
+      if (reduzir) return (el.textContent = ate);
+      const inicio = performance.now();
+      (function passo(agora) {
+        const t = Math.min((agora - inicio) / 1000, 1);
+        el.textContent = Math.round(ate * (1 - Math.pow(1 - t, 3)));
+        if (t < 1) requestAnimationFrame(passo);
+      })(inicio);
+    }
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver((entradas) => {
+        entradas.forEach((e) => {
+          if (!e.isIntersecting) return;
+          contar(e.target);
+          obs.unobserve(e.target);
+        });
+      }, { threshold: 0.6 });
+      placares.forEach((p) => obs.observe(p));
+    } else {
+      placares.forEach(contar);
+    }
+  </script>
 </body>
 </html>

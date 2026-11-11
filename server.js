@@ -178,12 +178,12 @@ app.post('/api/historico/:id/carta', logado, async (req, res) => {
       .get(req.params.id, req.session.userId);
     if (!item) return res.status(404).json({ erro: 'Não achei' });
 
-    const r = JSON.parse(item.resultado);
+    // manda o original, que é a fonte dos fatos, pra carta não pegar algo que a adaptação exagerou
     const carta = await gerarCarta({
       nome: req.session.nome,
       cargo: item.cargo,
       vaga: item.vaga,
-      curriculo: r.curriculo_adaptado,
+      curriculo: item.curriculo_original,
     });
     db.prepare('UPDATE adaptacoes SET carta = ? WHERE id = ?').run(carta, item.id);
     res.json({ carta });
@@ -191,6 +191,28 @@ app.post('/api/historico/:id/carta', logado, async (req, res) => {
     console.error(e);
     res.status(500).json({ erro: e.message || 'Não consegui gerar a carta' });
   }
+});
+
+app.put('/api/historico/:id', logado, (req, res) => {
+  const texto = req.body && req.body.curriculo_adaptado;
+  if (typeof texto !== 'string' || !texto.trim()) return res.status(400).json({ erro: 'O currículo não pode ficar vazio' });
+  if (texto.length > 20000) return res.status(400).json({ erro: 'Texto grande demais' });
+
+  const item = db
+    .prepare('SELECT resultado FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
+    .get(req.params.id, req.session.userId);
+  if (!item) return res.status(404).json({ erro: 'Não achei' });
+
+  const resultado = { ...JSON.parse(item.resultado), curriculo_adaptado: texto };
+  db.prepare('UPDATE adaptacoes SET resultado = ? WHERE id = ?').run(JSON.stringify(resultado), req.params.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/ultimo-curriculo', logado, (req, res) => {
+  const item = db
+    .prepare('SELECT curriculo_original FROM adaptacoes WHERE usuario_id = ? AND apagado = 0 ORDER BY id DESC LIMIT 1')
+    .get(req.session.userId);
+  res.json({ curriculo: item ? item.curriculo_original : null });
 });
 
 app.delete('/api/historico/:id', logado, (req, res) => {

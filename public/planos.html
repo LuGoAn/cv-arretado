@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Planos - CV Arretado</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..900&family=Source+Serif+4:opsz,wght@8..60,400..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
@@ -50,9 +51,10 @@
     </p>
   </main>
 
+  <script src="ui.js"></script>
   <script>
     fetch('/api/eu').then((r) => {
-      if (r.status === 401) return (location.href = '/');
+      if (r.status === 401) return (location.href = '/entrar.html');
       return r.json();
     }).then((u) => {
       if (!u) return;
@@ -71,7 +73,14 @@
 
     document.getElementById('cancelar').addEventListener('click', async (e) => {
       e.preventDefault();
-      if (!confirm('Cancelar o Premium e voltar pro plano grátis?')) return;
+      const sim = await confirmar({
+        titulo: 'Cancelar o Premium?',
+        texto: 'Você volta pro plano grátis, com 1 adaptação por mês. Seu histórico continua salvo.',
+        ok: 'Cancelar assinatura',
+        cancelar: 'Continuar no Premium',
+        perigo: true,
+      });
+      if (!sim) return;
       await fetch('/api/cancelar', { method: 'POST' });
       location.reload();
     });

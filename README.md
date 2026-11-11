@@ -30,7 +30,7 @@ Coloca a chave no `.env` em `GROQ_API_KEY` e roda:
 npm start
 ```
 
-Abre http://localhost:3000, cria uma conta e testa.
+Abre http://localhost:3000, cria uma conta e testa. No app tem um botão "Usar exemplo" que preenche um currículo e uma vaga de teste.
 
 O banco fica em `data/cv-arretado.db` e é criado sozinho na primeira vez.
 
@@ -39,7 +39,7 @@ O banco fica em `data/cv-arretado.db` e é criado sozinho na primeira vez.
 1. Login/cadastro simples, senha com hash scrypt e sessão em cookie.
 2. O PDF é lido no servidor com `pdf-parse`. PDF escaneado (imagem) não funciona, aí tem que colar o texto.
 3. O texto do currículo e da vaga vão pra Groq com um prompt de recrutador, pedindo resposta em JSON.
-4. O resultado fica salvo no histórico do usuário. Dá pra copiar o texto, e no Premium também baixar em PDF (usa o imprimir do navegador).
+4. O resultado fica salvo no histórico do usuário. Dá pra ver lado a lado com o original, editar o texto e copiar. No Premium também dá pra baixar em PDF (usa o imprimir do navegador) em 3 modelos.
 5. Plano grátis tem 1 adaptação por mês. O Premium (R$ 14,90) libera adaptações ilimitadas e carta de apresentação. O checkout é só simulação, não cobra nada nem manda dado de cartão pra lugar nenhum. Dá pra cancelar na página de planos pra voltar pro grátis.
 
 ## Estrutura
@@ -49,6 +49,6 @@ server.js        rotas da API
 src/db.js        tabelas do SQLite
 src/groq.js      prompt e chamada da IA
 src/senha.js     hash de senha
-public/          telas (login e app)
+public/          telas (landing, login, app, planos e checkout)
 docs/bmc.md      business model canvas
 ```

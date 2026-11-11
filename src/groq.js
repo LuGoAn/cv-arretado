@@ -24,7 +24,10 @@ Responda SOMENTE com um JSON válido neste formato:
 
 const PROMPT_CARTA = `Você escreve cartas de apresentação curtas para candidatos a vagas no Brasil.
 Regras:
-- Use só informações do currículo. Não invente nada.
+- Use SOMENTE fatos que estão escritos no currículo: empresas, cargos, projetos, cursos, ferramentas e resultados.
+- Não invente nada. Isso inclui soft skills, trabalho em equipe, colaboração com outras áreas, números ou conquistas que o currículo não cita.
+- Se a vaga pede algo que não está no currículo, não diga que a pessoa tem. No máximo diga que tem interesse em aprender, uma vez só.
+- Antes de escrever cada frase, confira se ela tem base num trecho do currículo. Se não tiver, corte.
 - 3 ou 4 parágrafos curtos, tom profissional mas humano, sem clichê exagerado.
 - Comece com "Olá, equipe de recrutamento," e termine com "Atenciosamente," e o nome da pessoa.
 - Ligue as experiências da pessoa com o que a vaga pede.
@@ -33,7 +36,7 @@ Regras:
 // a groq aposenta modelo sem avisar muito, então tenta em ordem até um funcionar
 const MODELOS_RESERVA = ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
 
-async function perguntarGroq(mensagens, { json = false } = {}) {
+async function perguntarGroq(mensagens, { json = false, temperatura = 0.4 } = {}) {
   if (!process.env.GROQ_API_KEY) {
     throw new Error('GROQ_API_KEY não configurada');
   }
@@ -51,7 +54,7 @@ async function perguntarGroq(mensagens, { json = false } = {}) {
       },
       body: JSON.stringify({
         model,
-        temperature: 0.4,
+        temperature: temperatura,
         ...(json ? { response_format: { type: 'json_object' } } : {}),
         messages: mensagens,
       }),
@@ -129,7 +132,7 @@ async function gerarCarta({ nome, cargo, vaga, curriculo }) {
       role: 'user',
       content: `NOME: ${nome}\nCARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO:\n${curriculo}`,
     },
-  ]);
+  ], { temperatura: 0.2 });
   return texto.trim();
 }
 

@@ -1,11 +1,12 @@
 const $ = (id) => document.getElementById(id);
 let atual = null;
 let eu = null;
+let ultimoCurriculo = null;
 
 async function api(url, opcoes) {
   const r = await fetch(url, opcoes);
   if (r.status === 401) {
-    location.href = '/';
+    location.href = '/entrar.html';
     throw new Error('sessão expirou');
   }
   const dados = await r.json();
@@ -17,24 +18,31 @@ async function api(url, opcoes) {
   return dados;
 }
 
+const premium = () => eu && eu.plano === 'premium';
+
 async function carregarPlano() {
   eu = await api('/api/eu');
   const primeiro = eu.nome.trim().split(/\s+/)[0];
   $('ola').textContent = 'Oi, ' + primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
-  const premium = eu.plano === 'premium';
-  $('baixar').innerHTML = premium ? 'Baixar em PDF' : 'Baixar em PDF <span class="cadeado">(Premium)</span>';
-  $('plano-atual').innerHTML = premium ? 'Plano <span class="grifo">Premium</span>' : 'Plano grátis';
-  $('upgrade').hidden = premium;
-  $('btn-carta').innerHTML = premium
+  $('plano-atual').innerHTML = premium() ? 'Plano <span class="grifo">Premium</span>' : 'Plano grátis';
+  $('upgrade').hidden = premium();
+  $('baixar').innerHTML = premium() ? 'Baixar em PDF' : 'Baixar em PDF <span class="cadeado">(Premium)</span>';
+  $('btn-carta').innerHTML = premium()
     ? 'Gerar carta de apresentação'
     : 'Carta de apresentação <span class="cadeado">(Premium)</span>';
 
-  const acabou = !premium && eu.usadas_mes >= eu.limite;
-  $('uso').innerHTML = premium
+  const acabou = !premium() && eu.usadas_mes >= eu.limite;
+  $('uso').innerHTML = premium()
     ? 'Plano Premium: adaptações ilimitadas.'
     : `Plano grátis: ${eu.usadas_mes} de ${eu.limite} adaptação usada este mês. <a href="/planos.html">Ver Premium</a>`;
   $('bloqueio').classList.toggle('on', acabou);
   $('adaptar').disabled = acabou;
+}
+
+async function carregarUltimo() {
+  const r = await api('/api/ultimo-curriculo');
+  ultimoCurriculo = r.curriculo;
+  $('usar-ultimo').hidden = !ultimoCurriculo;
 }
 
 function escapar(s) {
@@ -52,6 +60,7 @@ function classeNota(n) {
 async function carregarHistorico() {
   const itens = await api('/api/historico');
   const lista = $('lista');
+  $('boas-vindas').hidden = itens.length > 0 || !!$('texto').value.trim();
   if (!itens.length) {
     lista.innerHTML = '<li class="vazio">Nenhuma ainda. A primeira aparece aqui.</li>';
     return;
@@ -75,6 +84,16 @@ async function abrir(id) {
   mostrar(item);
 }
 
+function chaves() {
+  return [...atual.palavras_encontradas, ...atual.palavras_faltando];
+}
+
+function renderCv() {
+  // o markdown vem da IA ou da pessoa, então tira qualquer html cru antes de renderizar
+  $('cv').innerHTML = marked.parse(escapar(atual.curriculo_adaptado));
+  grifar($('cv'), chaves());
+}
+
 function mostrar(r) {
   atual = r;
   $('formulario').style.display = 'none';
@@ -86,12 +105,10 @@ function mostrar(r) {
   $('encontradas').innerHTML = r.palavras_encontradas.map((p) => `<mark>${escapar(p)}</mark>`).join('') || 'nenhuma';
   $('faltando').innerHTML = r.palavras_faltando.map((p) => `<mark class="falta">${escapar(p)}</mark>`).join('') || 'nada, tá completo';
   $('dicas').innerHTML = r.dicas.map((d) => `<li>${escapar(d)}</li>`).join('');
-  // o markdown vem da IA, então tira qualquer html cru antes de renderizar
-  $('cv').innerHTML = marked.parse(escapar(r.curriculo_adaptado));
+  renderCv();
   $('cv-original').textContent = r.curriculo_original || '';
-  const chaves = [...r.palavras_encontradas, ...r.palavras_faltando];
-  grifar($('cv'), chaves);
-  grifar($('cv-original'), chaves);
+  grifar($('cv-original'), chaves());
+  fecharEditor();
   trocarDoc('adaptado');
   $('erro-carta').textContent = '';
   mostrarCarta(r.carta);
@@ -148,12 +165,69 @@ function trocarDoc(qual) {
     b.classList.toggle('ativa', ativa);
     b.setAttribute('aria-selected', ativa);
   });
-  $('cv').hidden = qual !== 'adaptado';
-  $('cv-original').hidden = qual !== 'original';
+  $('docs').classList.toggle('lado', qual === 'lado');
+  $('cv').hidden = qual === 'original';
+  $('cv-original').hidden = qual === 'adaptado';
 }
 
 document.querySelectorAll('.abas-doc button').forEach((b) => {
   b.addEventListener('click', () => trocarDoc(b.dataset.doc));
+});
+
+function aplicarModelo(m) {
+  $('cv').classList.remove('modelo-classico', 'modelo-moderno', 'modelo-compacto');
+  $('cv').classList.add('modelo-' + m);
+  $('modelo').value = m;
+}
+
+$('modelo').addEventListener('change', () => {
+  aplicarModelo($('modelo').value);
+  try { localStorage.setItem('cv-modelo', $('modelo').value); } catch {}
+});
+
+try { aplicarModelo(localStorage.getItem('cv-modelo') || 'classico'); } catch { aplicarModelo('classico'); }
+
+function abrirEditor() {
+  $('texto-editor').value = atual.curriculo_adaptado;
+  $('erro-edicao').textContent = '';
+  $('editor').hidden = false;
+  $('docs').hidden = true;
+  $('legenda-grifo').hidden = true;
+  document.querySelector('.barra-doc').hidden = true;
+  $('editar').disabled = true;
+  $('texto-editor').focus();
+}
+
+function fecharEditor() {
+  $('editor').hidden = true;
+  $('docs').hidden = false;
+  $('legenda-grifo').hidden = false;
+  document.querySelector('.barra-doc').hidden = false;
+  $('editar').disabled = false;
+}
+
+$('editar').addEventListener('click', abrirEditor);
+$('cancelar-edicao').addEventListener('click', fecharEditor);
+
+$('salvar-edicao').addEventListener('click', async () => {
+  const texto = $('texto-editor').value;
+  const b = $('salvar-edicao');
+  b.disabled = true;
+  try {
+    await api('/api/historico/' + atual.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ curriculo_adaptado: texto }),
+    });
+    atual.curriculo_adaptado = texto;
+    renderCv();
+    fecharEditor();
+    trocarDoc('adaptado');
+  } catch (err) {
+    $('erro-edicao').textContent = err.message;
+  } finally {
+    b.disabled = false;
+  }
 });
 
 function mostrarCarta(carta) {
@@ -167,10 +241,21 @@ function novo() {
   $('formulario').style.display = '';
   carregarHistorico();
   carregarPlano();
+  carregarUltimo();
+}
+
+// a resposta da IA demora uns segundos, então vai mostrando o que tá acontecendo
+function etapas(lista) {
+  let i = 0;
+  $('etapa').textContent = lista[0];
+  const t = setInterval(() => {
+    if (i < lista.length - 1) $('etapa').textContent = lista[++i];
+  }, 2600);
+  return () => clearInterval(t);
 }
 
 $('btn-carta').addEventListener('click', async () => {
-  if (eu.plano !== 'premium') {
+  if (!premium()) {
     location.href = '/planos.html';
     return;
   }
@@ -203,6 +288,18 @@ $('arquivo').addEventListener('change', () => {
   $('area-upload').classList.toggle('tem', !!f);
 });
 
+function limparArquivo() {
+  $('arquivo').value = '';
+  $('nome-arquivo').textContent = 'Clica aqui pra escolher o PDF';
+  $('area-upload').classList.remove('tem');
+}
+
+$('usar-ultimo').addEventListener('click', () => {
+  limparArquivo();
+  $('texto').value = ultimoCurriculo;
+  $('texto').focus();
+});
+
 $('form').addEventListener('submit', async (e) => {
   e.preventDefault();
   $('erro').textContent = '';
@@ -221,22 +318,32 @@ $('form').addEventListener('submit', async (e) => {
 
   $('adaptar').disabled = true;
   $('carregando').classList.add('on');
+  const parar = etapas([
+    f ? 'Lendo o seu PDF...' : 'Lendo o seu currículo...',
+    'Comparando com o que a vaga pede...',
+    'Reescrevendo os pontos que combinam...',
+    'Calculando a nota de encaixe...',
+    'Quase lá, finalizando...',
+  ]);
   try {
     const r = await api('/api/adaptar', { method: 'POST', body: fd });
     mostrar(r);
   } catch (err) {
     if (err.codigo !== 'limite') $('erro').textContent = err.message;
   } finally {
+    parar();
     $('carregando').classList.remove('on');
     carregarPlano();
   }
 });
 
 $('baixar').addEventListener('click', () => {
-  if (eu.plano !== 'premium') {
+  if (!premium()) {
     location.href = '/planos.html';
     return;
   }
+  fecharEditor();
+  trocarDoc('adaptado');
   window.print();
 });
 
@@ -247,12 +354,23 @@ $('copiar').addEventListener('click', async () => {
 });
 
 $('apagar').addEventListener('click', async () => {
-  if (!confirm('Apagar essa adaptação?')) return;
+  const sim = await confirmar({
+    titulo: 'Apagar essa adaptação?',
+    texto: 'Ela some do seu histórico e não dá pra recuperar.',
+    ok: 'Apagar',
+    perigo: true,
+  });
+  if (!sim) return;
   await api('/api/historico/' + atual.id, { method: 'DELETE' });
   novo();
 });
 
 $('nova').addEventListener('click', novo);
+
+$('sair').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  location.href = '/';
+});
 
 const EXEMPLO_CV = `Maria Souza
 Recife, PE | maria.souza@email.com | (81) 99999-0000 | linkedin.com/in/mariasouza
@@ -303,21 +421,18 @@ Diferenciais
 - Experiência com metodologias ágeis
 - Inglês para leitura técnica`;
 
-$('exemplo').addEventListener('click', () => {
+function preencherExemplo() {
   if (atual) novo();
-  $('arquivo').value = '';
-  $('nome-arquivo').textContent = 'Clica aqui pra escolher o PDF';
-  $('area-upload').classList.remove('tem');
+  limparArquivo();
   $('texto').value = EXEMPLO_CV;
   $('cargo').value = 'Desenvolvedor Front-end Júnior';
   $('vaga').value = EXEMPLO_VAGA;
   $('erro').textContent = '';
+  $('boas-vindas').hidden = true;
   $('formulario').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
+}
 
-$('sair').addEventListener('click', async () => {
-  await fetch('/api/logout', { method: 'POST' });
-  location.href = '/';
-});
+$('exemplo').addEventListener('click', preencherExemplo);
+$('testar-exemplo').addEventListener('click', preencherExemplo);
 
-carregarPlano().then(carregarHistorico);
+carregarPlano().then(carregarHistorico).then(carregarUltimo);

@@ -2,22 +2,27 @@ let aba = 'login';
 
 fetch('/api/eu').then((r) => { if (r.ok) location.href = '/app.html'; });
 
+function trocarAba(qual) {
+  aba = qual;
+  const cad = aba === 'cadastro';
+  document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x.dataset.aba === aba));
+  document.getElementById('campo-nome').hidden = !cad;
+  document.getElementById('nome').required = cad;
+  document.getElementById('enviar').textContent = cad ? 'Criar conta' : 'Entrar';
+  document.getElementById('titulo-form').textContent = cad ? 'Cria sua conta' : 'Bem-vindo de volta';
+  document.getElementById('sub-form').textContent = cad
+    ? 'A primeira adaptação do mês é por nossa conta.'
+    : 'Entra pra ver suas adaptações.';
+  document.getElementById('senha').autocomplete = cad ? 'new-password' : 'current-password';
+  document.getElementById('erro').textContent = '';
+}
+
 document.querySelectorAll('.abas button').forEach((b) => {
-  b.addEventListener('click', () => {
-    aba = b.dataset.aba;
-    document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === b));
-    document.getElementById('campo-nome').hidden = aba !== 'cadastro';
-    document.getElementById('nome').required = aba === 'cadastro';
-    const cad = aba === 'cadastro';
-    document.getElementById('enviar').textContent = cad ? 'Criar conta' : 'Entrar';
-    document.getElementById('titulo-form').textContent = cad ? 'Cria sua conta' : 'Bem-vindo de volta';
-    document.getElementById('sub-form').textContent = cad
-      ? 'A primeira adaptação do mês é por nossa conta.'
-      : 'Entra pra ver suas adaptações.';
-    document.getElementById('senha').autocomplete = cad ? 'new-password' : 'current-password';
-    document.getElementById('erro').textContent = '';
-  });
+  b.addEventListener('click', () => trocarAba(b.dataset.aba));
 });
+
+// a landing manda pra /entrar.html#cadastro quando a pessoa clica em criar conta
+if (location.hash === '#cadastro') trocarAba('cadastro');
 
 document.getElementById('form').addEventListener('submit', async (e) => {
   e.preventDefault();
