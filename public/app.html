@@ -5,23 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CV Arretado</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Ultra&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <div class="topo-wrap"><div class="faixa-chita" aria-hidden="true"></div>
   <header class="topo">
-    <div class="marca">CV <span>Arretado</span></div>
+    <a href="/app.html" class="marca">CV Arretado</a>
     <div class="usuario">
       <span id="ola"></span>
-      <a href="/planos.html" class="selo-plano" id="selo-plano" style="text-decoration:none"></a>
+      <a href="/planos.html" class="selo-plano" id="selo-plano"></a>
       <button class="btn secundario" id="sair">Sair</button>
     </div>
-  </header>
+  </header></div>
 
   <main class="layout">
     <aside class="historico">
       <h3>Suas adaptações</h3>
-      <button class="btn secundario" id="nova" style="width:100%;margin-bottom:10px">+ Nova</button>
+      <button class="btn secundario" id="nova">Nova adaptação</button>
       <ul id="lista"></ul>
     </aside>
 
@@ -50,7 +51,7 @@
           </div>
 
           <div class="acoes">
-            <button class="btn" id="adaptar">Adaptar currículo</button>
+            <button class="btn" id="adaptar">Adaptar pra essa vaga</button>
             <div class="carregando" id="carregando"><div class="giro"></div> A IA tá trabalhando, segura aí...</div>
           </div>
           <div class="erro" id="erro"></div>
@@ -73,6 +74,7 @@
             <div class="rot">Encaixe do currículo original</div>
             <div class="barra"><div id="barra-antes"></div></div>
           </div>
+          <div class="seta" aria-hidden="true">&rarr;</div>
           <div class="nota depois">
             <div class="num" id="nota-depois">0</div>
             <div class="rot">Encaixe depois da adaptação</div>

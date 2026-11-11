@@ -8,7 +8,13 @@ document.querySelectorAll('.abas button').forEach((b) => {
     document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === b));
     document.getElementById('campo-nome').hidden = aba !== 'cadastro';
     document.getElementById('nome').required = aba === 'cadastro';
-    document.getElementById('enviar').textContent = aba === 'cadastro' ? 'Criar conta' : 'Entrar';
+    const cad = aba === 'cadastro';
+    document.getElementById('enviar').textContent = cad ? 'Criar conta' : 'Entrar';
+    document.getElementById('titulo-form').textContent = cad ? 'Cria sua conta' : 'Bem-vindo de volta';
+    document.getElementById('sub-form').textContent = cad
+      ? 'A primeira adaptação do mês é por nossa conta.'
+      : 'Entra pra ver suas adaptações.';
+    document.getElementById('senha').autocomplete = cad ? 'new-password' : 'current-password';
     document.getElementById('erro').textContent = '';
   });
 });

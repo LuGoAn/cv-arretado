@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <rect width="120" height="120" fill="#23307a"/>
+  <g fill="#1f8a5b">
+    <ellipse cx="52" cy="18" rx="14" ry="5" transform="rotate(-25 52 18)"/>
+    <ellipse cx="12" cy="50" rx="14" ry="5" transform="rotate(60 12 50)"/>
+    <ellipse cx="108" cy="70" rx="12" ry="4.5" transform="rotate(40 108 70)"/>
+    <ellipse cx="62" cy="96" rx="11" ry="4" transform="rotate(-50 62 96)"/>
+  </g>
+  <g transform="translate(30 30)" fill="#e0402b">
+    <circle cx="12" cy="0" r="11"/><circle cx="6" cy="10.4" r="11"/><circle cx="-6" cy="10.4" r="11"/>
+    <circle cx="-12" cy="0" r="11"/><circle cx="-6" cy="-10.4" r="11"/><circle cx="6" cy="-10.4" r="11"/>
+    <circle r="8" fill="#ffc531"/><circle r="3" fill="#23307a"/>
+  </g>
+  <g transform="translate(90 90)" fill="#f28cb1">
+    <circle cx="8" cy="0" r="7"/><circle cx="4" cy="6.9" r="7"/><circle cx="-4" cy="6.9" r="7"/>
+    <circle cx="-8" cy="0" r="7"/><circle cx="-4" cy="-6.9" r="7"/><circle cx="4" cy="-6.9" r="7"/>
+    <circle r="5" fill="#ffc531"/>
+  </g>
+  <g transform="translate(90 26)" fill="#ffc531">
+    <circle cx="6" cy="0" r="5"/><circle cx="3" cy="5.2" r="5"/><circle cx="-3" cy="5.2" r="5"/>
+    <circle cx="-6" cy="0" r="5"/><circle cx="-3" cy="-5.2" r="5"/><circle cx="3" cy="-5.2" r="5"/>
+    <circle r="3" fill="#e0402b"/>
+  </g>
+  <g transform="translate(26 92)" fill="#ffffff">
+    <circle cx="6" cy="0" r="5"/><circle cx="3" cy="5.2" r="5"/><circle cx="-3" cy="5.2" r="5"/>
+    <circle cx="-6" cy="0" r="5"/><circle cx="-3" cy="-5.2" r="5"/><circle cx="3" cy="-5.2" r="5"/>
+    <circle r="3" fill="#e0402b"/>
+  </g>
+  <g fill="#ffffff" opacity=".55">
+    <circle cx="60" cy="58" r="2"/><circle cx="110" cy="112" r="1.6"/><circle cx="6" cy="10" r="1.6"/><circle cx="72" cy="6" r="1.4"/>
+  </g>
+</svg>

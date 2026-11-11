@@ -21,7 +21,7 @@ async function carregarPlano() {
   eu = await api('/api/eu');
   $('ola').textContent = 'Oi, ' + eu.nome.split(' ')[0];
   const premium = eu.plano === 'premium';
-  $('selo-plano').textContent = premium ? 'Premium' : 'Grátis · seja Premium';
+  $('selo-plano').textContent = premium ? 'Premium' : 'Plano grátis';
   $('selo-plano').classList.toggle('premium', premium);
   $('btn-carta').innerHTML = premium
     ? 'Gerar carta de apresentação'
@@ -51,14 +51,14 @@ async function carregarHistorico() {
   const itens = await api('/api/historico');
   const lista = $('lista');
   if (!itens.length) {
-    lista.innerHTML = '<li class="vazio">Nada ainda. Faz a primeira!</li>';
+    lista.innerHTML = '<li class="vazio">Nenhuma ainda. A primeira aparece aqui.</li>';
     return;
   }
   lista.innerHTML = itens
     .map((i) => {
       const data = new Date(i.criado_em.replace(' ', 'T') + 'Z').toLocaleDateString('pt-BR');
       return `<li data-id="${i.id}" class="${atual && atual.id === i.id ? 'ativo' : ''}">
-        <span>${escapar(i.cargo || 'Sem cargo')}<br><small style="color:var(--suave)">${data}</small></span>
+        <span>${escapar(i.cargo || 'Sem cargo')}<br><small>${data}</small></span>
         <span class="selo ${classeNota(i.nota)}">${i.nota}</span>
       </li>`;
     })
@@ -80,9 +80,8 @@ function mostrar(r) {
   $('res-titulo').textContent = r.cargo || 'Resultado';
   $('res-resumo').textContent = r.resumo;
   $('nota-antes').textContent = r.nota;
-  $('nota-depois').textContent = r.nota_adaptado;
   $('barra-antes').style.width = r.nota + '%';
-  $('barra-depois').style.width = r.nota_adaptado + '%';
+  animarNota(r.nota, r.nota_adaptado);
   $('encontradas').innerHTML = r.palavras_encontradas.map((p) => `<span class="tag">${escapar(p)}</span>`).join('') || '<small>nenhuma</small>';
   $('faltando').innerHTML = r.palavras_faltando.map((p) => `<span class="tag falta">${escapar(p)}</span>`).join('') || '<small>nenhuma</small>';
   $('dicas').innerHTML = r.dicas.map((d) => `<li>${escapar(d)}</li>`).join('');
@@ -92,6 +91,27 @@ function mostrar(r) {
   mostrarCarta(r.carta);
   carregarHistorico();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// a nota adaptada sobe a partir da original, pra mostrar o ganho
+function animarNota(de, ate) {
+  const num = $('nota-depois');
+  const barra = $('barra-depois');
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches || ate <= de) {
+    num.textContent = ate;
+    barra.style.width = ate + '%';
+    return;
+  }
+  const inicio = performance.now();
+  const duracao = 900;
+  function passo(agora) {
+    const t = Math.min((agora - inicio) / duracao, 1);
+    const v = Math.round(de + (ate - de) * (1 - Math.pow(1 - t, 3)));
+    num.textContent = v;
+    barra.style.width = v + '%';
+    if (t < 1) requestAnimationFrame(passo);
+  }
+  requestAnimationFrame(passo);
 }
 
 function mostrarCarta(carta) {
