@@ -9,6 +9,7 @@ Regras:
 - Use as palavras-chave da vaga quando elas descreverem algo que a pessoa realmente fez (ajuda em filtros de ATS).
 - Escreva em português do Brasil, tom profissional e direto, verbos no passado para experiências.
 - O currículo adaptado deve vir em Markdown: nome como # título, seções com ##, itens com -.
+- Logo abaixo do nome, mantenha TODOS os dados de contato do original (email, telefone, cidade, LinkedIn, GitHub, portfólio), exatamente como estão, numa linha separados por " | ".
 
 Responda SOMENTE com um JSON válido neste formato:
 {
@@ -94,9 +95,31 @@ async function adaptarCurriculo({ curriculo, vaga, cargo }) {
     resumo: json.resumo || '',
     palavras_encontradas: json.palavras_encontradas || [],
     palavras_faltando: json.palavras_faltando || [],
-    curriculo_adaptado: json.curriculo_adaptado || '',
+    curriculo_adaptado: garantirContatos(json.curriculo_adaptado || '', curriculo),
     dicas: json.dicas || [],
   };
+}
+
+// mesmo pedindo no prompt, a IA às vezes some com email e telefone
+function garantirContatos(md, original) {
+  const soDigitos = (s) => s.replace(/\D/g, '');
+  const faltando = [];
+
+  const email = original.match(/[\w.+-]+@[\w-]+(\.[\w-]+)+/);
+  if (email && !md.toLowerCase().includes(email[0].toLowerCase())) faltando.push(email[0]);
+
+  const tel = original.match(/(\+?55[\s-]?)?\(?\d{2}\)?[\s-]?9?\s?\d{4}[\s-]?\d{4}/);
+  if (tel && !soDigitos(md).includes(soDigitos(tel[0]).slice(-8))) faltando.push(tel[0].trim());
+
+  if (!faltando.length) return md;
+  const linhas = md.split('\n');
+  const titulo = linhas.findIndex((l) => l.startsWith('# '));
+  const contato = faltando.join(' | ');
+  if (titulo === -1) return contato + '\n\n' + md;
+  const prox = linhas[titulo + 1];
+  if (prox && prox.trim() && !prox.startsWith('#')) linhas[titulo + 1] = prox.trimEnd() + ' | ' + contato;
+  else linhas.splice(titulo + 1, 0, '', contato);
+  return linhas.join('\n');
 }
 
 async function gerarCarta({ nome, cargo, vaga, curriculo }) {

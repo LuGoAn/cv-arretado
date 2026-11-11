@@ -19,8 +19,10 @@ async function api(url, opcoes) {
 
 async function carregarPlano() {
   eu = await api('/api/eu');
-  $('ola').textContent = 'Oi, ' + eu.nome.split(' ')[0];
+  const primeiro = eu.nome.trim().split(/\s+/)[0];
+  $('ola').textContent = 'Oi, ' + primeiro.charAt(0).toUpperCase() + primeiro.slice(1).toLowerCase();
   const premium = eu.plano === 'premium';
+  $('baixar').innerHTML = premium ? 'Baixar em PDF' : 'Baixar em PDF <span class="cadeado">(Premium)</span>';
   $('plano-atual').innerHTML = premium ? 'Plano <span class="grifo">Premium</span>' : 'Plano grátis';
   $('upgrade').hidden = premium;
   $('btn-carta').innerHTML = premium
@@ -230,7 +232,13 @@ $('form').addEventListener('submit', async (e) => {
   }
 });
 
-$('baixar').addEventListener('click', () => window.print());
+$('baixar').addEventListener('click', () => {
+  if (eu.plano !== 'premium') {
+    location.href = '/planos.html';
+    return;
+  }
+  window.print();
+});
 
 $('copiar').addEventListener('click', async () => {
   await navigator.clipboard.writeText(atual.curriculo_adaptado);
