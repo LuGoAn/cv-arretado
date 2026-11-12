@@ -35,6 +35,7 @@ for (const sql of [
   'ALTER TABLE adaptacoes ADD COLUMN carta TEXT',
   // apagar só esconde, senão a pessoa apaga e ganha outra adaptação grátis
   'ALTER TABLE adaptacoes ADD COLUMN apagado INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE adaptacoes ADD COLUMN exemplo INTEGER NOT NULL DEFAULT 0',
 ]) {
   try { db.exec(sql); } catch {}
 }

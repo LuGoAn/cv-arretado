@@ -9,6 +9,7 @@ const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 const db = require('./src/db');
 const { hashSenha, conferirSenha } = require('./src/senha');
 const { adaptarCurriculo } = require('./src/groq');
+const { ehExemplo } = require('./public/exemplo');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -36,7 +37,7 @@ function statusPlano(userId) {
   const u = db.prepare('SELECT nome, plano, premium_desde FROM usuarios WHERE id = ?').get(userId);
   const { total } = db
     .prepare(
-      "SELECT COUNT(*) AS total FROM adaptacoes WHERE usuario_id = ? AND strftime('%Y-%m', criado_em) = strftime('%Y-%m', 'now')"
+      "SELECT COUNT(*) AS total FROM adaptacoes WHERE usuario_id = ? AND exemplo = 0 AND strftime('%Y-%m', criado_em) = strftime('%Y-%m', 'now')"
     )
     .get(userId);
   return {
@@ -106,16 +107,11 @@ app.post('/api/cancelar', logado, (req, res) => {
   res.json({ ok: true, ...statusPlano(req.session.userId) });
 });
 
+// o exemplo é sempre igual, então guarda a resposta e não gasta a IA de novo
+let respostaExemplo = null;
+
 app.post('/api/adaptar', logado, upload.single('arquivo'), async (req, res) => {
   try {
-    const plano = statusPlano(req.session.userId);
-    if (plano.limite !== null && plano.usadas_mes >= plano.limite) {
-      return res.status(402).json({
-        erro: 'Você já usou sua adaptação grátis deste mês. Assina o Premium pra continuar.',
-        codigo: 'limite',
-      });
-    }
-
     const vaga = (req.body.vaga || '').trim();
     const cargo = (req.body.cargo || '').trim();
     let curriculo = (req.body.texto || '').trim();
@@ -134,17 +130,31 @@ app.post('/api/adaptar', logado, upload.single('arquivo'), async (req, res) => {
     if (!curriculo) return res.status(400).json({ erro: 'Manda o currículo em PDF ou cola o texto' });
     if (vaga.length < 30) return res.status(400).json({ erro: 'Cola a descrição da vaga completa' });
 
-    const resultado = await adaptarCurriculo({
-      curriculo: curriculo.slice(0, 15000),
-      vaga: vaga.slice(0, 8000),
-      cargo,
-    });
+    // o exemplo não conta no limite, senão a pessoa testa e perde a adaptação grátis
+    const exemplo = !req.file && ehExemplo(curriculo, vaga);
+    const plano = statusPlano(req.session.userId);
+    if (!exemplo && plano.limite !== null && plano.usadas_mes >= plano.limite) {
+      return res.status(402).json({
+        erro: 'Você já usou sua adaptação grátis deste mês. Assina o Premium pra continuar.',
+        codigo: 'limite',
+      });
+    }
+
+    let resultado = exemplo ? respostaExemplo : null;
+    if (!resultado) {
+      resultado = await adaptarCurriculo({
+        curriculo: curriculo.slice(0, 15000),
+        vaga: vaga.slice(0, 8000),
+        cargo,
+      });
+      if (exemplo) respostaExemplo = resultado;
+    }
 
     const r = db
       .prepare(
-        'INSERT INTO adaptacoes (usuario_id, cargo, vaga, curriculo_original, resultado, nota) VALUES (?, ?, ?, ?, ?, ?)'
+        'INSERT INTO adaptacoes (usuario_id, cargo, vaga, curriculo_original, resultado, nota, exemplo) VALUES (?, ?, ?, ?, ?, ?, ?)'
       )
-      .run(req.session.userId, cargo, vaga, curriculo, JSON.stringify(resultado), resultado.nota_adaptado);
+      .run(req.session.userId, cargo, vaga, curriculo, JSON.stringify(resultado), resultado.nota_adaptado, exemplo ? 1 : 0);
 
     res.json({ id: Number(r.lastInsertRowid), cargo, curriculo_original: curriculo, ...resultado });
   } catch (e) {
@@ -188,7 +198,7 @@ app.put('/api/historico/:id', logado, (req, res) => {
 
 app.get('/api/ultimo-curriculo', logado, (req, res) => {
   const item = db
-    .prepare('SELECT curriculo_original FROM adaptacoes WHERE usuario_id = ? AND apagado = 0 ORDER BY id DESC LIMIT 1')
+    .prepare('SELECT curriculo_original FROM adaptacoes WHERE usuario_id = ? AND apagado = 0 AND exemplo = 0 ORDER BY id DESC LIMIT 1')
     .get(req.session.userId);
   res.json({ curriculo: item ? item.curriculo_original : null });
 });
