@@ -88,11 +88,186 @@ function chaves() {
   return [...atual.palavras_encontradas, ...atual.palavras_faltando];
 }
 
+let cvDados = null;
+let editando = false;
+let backup = null;
+let modeloAtual = 'classico';
+try {
+  const salvo = localStorage.getItem('cv-modelo');
+  if (MODELOS.some((m) => m.id === salvo)) modeloAtual = salvo;
+} catch {}
+
 function renderCv() {
-  // o markdown vem da IA ou da pessoa, então tira qualquer html cru antes de renderizar
-  $('cv').innerHTML = marked.parse(escapar(atual.curriculo_adaptado));
-  grifar($('cv'), chaves());
+  $('cv').className = `folha doc cv modelo-${modeloAtual}${editando ? ' editando' : ''}`;
+  $('cv').innerHTML = renderizarCv(cvDados, modeloAtual, { editavel: editando });
+  if (!editando) grifar($('cv'), chaves());
 }
+
+function renderGaleria() {
+  $('galeria').innerHTML = MODELOS.map(
+    (m) => `<button type="button" class="opcao-modelo${m.id === modeloAtual ? ' ativa' : ''}" role="radio" aria-checked="${m.id === modeloAtual}" data-m="${m.id}">
+      <div class="miniatura" aria-hidden="true"><div class="folha doc cv modelo-${m.id}">${renderizarCv(cvDados, m.id)}</div></div>
+      <span class="nome-modelo">${m.nome}${m.ats ? ' <span class="tag-ats">ATS</span>' : ''}</span>
+    </button>`
+  ).join('');
+}
+
+$('galeria').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-m]');
+  if (!b) return;
+  modeloAtual = b.dataset.m;
+  try { localStorage.setItem('cv-modelo', modeloAtual); } catch {}
+  $('galeria').querySelectorAll('[data-m]').forEach((x) => {
+    x.classList.toggle('ativa', x === b);
+    x.setAttribute('aria-checked', x === b);
+  });
+  renderCv();
+});
+
+// edição direto na folha: só os textos são editáveis, a estrutura fica travada
+function lerEdicao() {
+  $('cv').querySelectorAll('[contenteditable="true"]').forEach((el) => {
+    const v = lerInline(el).trim();
+    const { k, s, b, i } = el.dataset;
+    if (k === 'nome') cvDados.nome = v;
+    else if (k === 'topo') cvDados.topo[+i] = v;
+    else if (k === 'titulo') cvDados.secoes[+s].titulo = v;
+    else {
+      const bloco = cvDados.secoes[+s].blocos[+b];
+      if (bloco.t === 'ul') bloco.itens[+i] = v;
+      else bloco.x = v;
+    }
+  });
+}
+
+function focar(seletor, noInicio) {
+  const el = $('cv').querySelector(seletor);
+  if (!el) return;
+  el.focus();
+  const r = document.createRange();
+  r.selectNodeContents(el);
+  r.collapse(noInicio);
+  const sel = getSelection();
+  sel.removeAllRanges();
+  sel.addRange(r);
+}
+
+function abrirEditor() {
+  backup = JSON.parse(JSON.stringify(cvDados));
+  editando = true;
+  trocarDoc('adaptado');
+  $('barra-edicao').hidden = false;
+  $('escolha-modelo').hidden = true;
+  $('barra-doc').hidden = true;
+  $('legenda-grifo').hidden = true;
+  $('erro-edicao').textContent = '';
+  $('editar').disabled = true;
+  renderCv();
+  $('barra-edicao').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function fecharEditor() {
+  editando = false;
+  $('barra-edicao').hidden = true;
+  $('escolha-modelo').hidden = false;
+  $('barra-doc').hidden = false;
+  $('legenda-grifo').hidden = false;
+  $('editar').disabled = false;
+  renderCv();
+}
+
+$('cv').addEventListener('keydown', (e) => {
+  if (!editando) return;
+  const el = e.target.closest('[contenteditable="true"]');
+  if (!el) return;
+
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (el.tagName !== 'LI') return;
+    // o que estiver depois do cursor vai pro item novo
+    let depois = '';
+    const sel = getSelection();
+    if (sel.rangeCount && el.contains(sel.focusNode)) {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      r.setStart(sel.focusNode, sel.focusOffset);
+      depois = r.toString().trim();
+      r.deleteContents();
+    }
+    lerEdicao();
+    const { s, b, i } = el.dataset;
+    cvDados.secoes[+s].blocos[+b].itens.splice(+i + 1, 0, depois);
+    renderCv();
+    focar(`li[data-s="${s}"][data-b="${b}"][data-i="${+i + 1}"]`, true);
+  } else if (e.key === 'Backspace' && el.tagName === 'LI' && !el.textContent.trim()) {
+    e.preventDefault();
+    lerEdicao();
+    const { s, b, i } = el.dataset;
+    const bloco = cvDados.secoes[+s].blocos[+b];
+    bloco.itens.splice(+i, 1);
+    if (!bloco.itens.length) cvDados.secoes[+s].blocos.splice(+b, 1);
+    renderCv();
+    if (+i > 0) focar(`li[data-s="${s}"][data-b="${b}"][data-i="${+i - 1}"]`, false);
+  }
+});
+
+// colar sempre como texto puro, senão vem formatação de outro site junto
+$('cv').addEventListener('paste', (e) => {
+  if (!editando) return;
+  e.preventDefault();
+  const texto = (e.clipboardData || window.clipboardData).getData('text/plain').replace(/\s*\n\s*/g, ' ');
+  document.execCommand('insertText', false, texto);
+});
+$('cv').addEventListener('drop', (e) => editando && e.preventDefault());
+
+$('cv').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-acao]');
+  if (!b || !editando) return;
+  lerEdicao();
+  const s = +b.dataset.s;
+  const secao = cvDados.secoes[s];
+  if (b.dataset.acao === 'remover') {
+    cvDados.secoes.splice(s, 1);
+    renderCv();
+    return;
+  }
+  let bi = secao.blocos.map((x) => x.t).lastIndexOf('ul');
+  if (bi === -1) {
+    secao.blocos.push({ t: 'ul', itens: [] });
+    bi = secao.blocos.length - 1;
+  }
+  secao.blocos[bi].itens.push('');
+  renderCv();
+  focar(`li[data-s="${s}"][data-b="${bi}"][data-i="${secao.blocos[bi].itens.length - 1}"]`, true);
+});
+
+$('editar').addEventListener('click', abrirEditor);
+$('cancelar-edicao').addEventListener('click', () => {
+  cvDados = backup;
+  fecharEditor();
+});
+
+$('salvar-edicao').addEventListener('click', async () => {
+  lerEdicao();
+  limparVazios(cvDados);
+  const md = paraMarkdown(cvDados);
+  const b = $('salvar-edicao');
+  b.disabled = true;
+  try {
+    await api('/api/historico/' + atual.id, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ curriculo_adaptado: md }),
+    });
+    atual.curriculo_adaptado = md;
+    fecharEditor();
+    renderGaleria();
+  } catch (err) {
+    $('erro-edicao').textContent = err.message;
+  } finally {
+    b.disabled = false;
+  }
+});
 
 function mostrar(r) {
   atual = r;
@@ -105,10 +280,11 @@ function mostrar(r) {
   $('encontradas').innerHTML = r.palavras_encontradas.map((p) => `<mark>${escapar(p)}</mark>`).join('') || 'nenhuma';
   $('faltando').innerHTML = r.palavras_faltando.map((p) => `<mark class="falta">${escapar(p)}</mark>`).join('') || 'nada, tá completo';
   $('dicas').innerHTML = r.dicas.map((d) => `<li>${escapar(d)}</li>`).join('');
-  renderCv();
+  cvDados = lerMarkdown(r.curriculo_adaptado);
+  fecharEditor();
+  renderGaleria();
   $('cv-original').textContent = r.curriculo_original || '';
   grifar($('cv-original'), chaves());
-  fecharEditor();
   trocarDoc('adaptado');
   $('erro-carta').textContent = '';
   mostrarCarta(r.carta);
@@ -137,7 +313,11 @@ function animarNota(de, ate) {
 function grifar(el, palavras) {
   const lista = palavras.filter((p) => p && p.length > 1).sort((a, b) => b.length - a.length);
   if (!lista.length) return;
-  const re = new RegExp(`(${lista.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})`, 'gi');
+  // só palavra inteira, senão "Git" grifa dentro de "GitHub"
+  const re = new RegExp(
+    `(?<![\\p{L}\\p{N}])(${lista.map((p) => p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})(?![\\p{L}\\p{N}])`,
+    'giu'
+  );
   const nos = [];
   const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) nos.push(walker.currentNode);
@@ -172,62 +352,6 @@ function trocarDoc(qual) {
 
 document.querySelectorAll('.abas-doc button').forEach((b) => {
   b.addEventListener('click', () => trocarDoc(b.dataset.doc));
-});
-
-function aplicarModelo(m) {
-  $('cv').classList.remove('modelo-classico', 'modelo-moderno', 'modelo-compacto');
-  $('cv').classList.add('modelo-' + m);
-  $('modelo').value = m;
-}
-
-$('modelo').addEventListener('change', () => {
-  aplicarModelo($('modelo').value);
-  try { localStorage.setItem('cv-modelo', $('modelo').value); } catch {}
-});
-
-try { aplicarModelo(localStorage.getItem('cv-modelo') || 'classico'); } catch { aplicarModelo('classico'); }
-
-function abrirEditor() {
-  $('texto-editor').value = atual.curriculo_adaptado;
-  $('erro-edicao').textContent = '';
-  $('editor').hidden = false;
-  $('docs').hidden = true;
-  $('legenda-grifo').hidden = true;
-  document.querySelector('.barra-doc').hidden = true;
-  $('editar').disabled = true;
-  $('texto-editor').focus();
-}
-
-function fecharEditor() {
-  $('editor').hidden = true;
-  $('docs').hidden = false;
-  $('legenda-grifo').hidden = false;
-  document.querySelector('.barra-doc').hidden = false;
-  $('editar').disabled = false;
-}
-
-$('editar').addEventListener('click', abrirEditor);
-$('cancelar-edicao').addEventListener('click', fecharEditor);
-
-$('salvar-edicao').addEventListener('click', async () => {
-  const texto = $('texto-editor').value;
-  const b = $('salvar-edicao');
-  b.disabled = true;
-  try {
-    await api('/api/historico/' + atual.id, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ curriculo_adaptado: texto }),
-    });
-    atual.curriculo_adaptado = texto;
-    renderCv();
-    fecharEditor();
-    trocarDoc('adaptado');
-  } catch (err) {
-    $('erro-edicao').textContent = err.message;
-  } finally {
-    b.disabled = false;
-  }
 });
 
 function mostrarCarta(carta) {
@@ -342,13 +466,16 @@ $('baixar').addEventListener('click', () => {
     location.href = '/planos.html';
     return;
   }
-  fecharEditor();
+  if (editando) {
+    $('erro-edicao').textContent = 'Salva ou cancela a edição antes de baixar.';
+    return;
+  }
   trocarDoc('adaptado');
   window.print();
 });
 
 $('copiar').addEventListener('click', async () => {
-  await navigator.clipboard.writeText(atual.curriculo_adaptado);
+  await navigator.clipboard.writeText(paraTexto(cvDados));
   $('copiar').textContent = 'Copiado!';
   setTimeout(() => ($('copiar').textContent = 'Copiar texto'), 1500);
 });

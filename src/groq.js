@@ -10,6 +10,15 @@ Regras:
 - Escreva em português do Brasil, tom profissional e direto, verbos no passado para experiências.
 - O currículo adaptado deve vir em Markdown: nome como # título, seções com ##, itens com -.
 - Logo abaixo do nome, mantenha TODOS os dados de contato do original (email, telefone, cidade, LinkedIn, GitHub, portfólio), exatamente como estão, numa linha separados por " | ".
+- Não use links nem negrito no meio do texto. Só # para o nome, ## para seções, ### para cargo/empresa quando precisar e - para itens.
+
+Seção de abertura (a primeira depois do contato):
+- Primeiro descubra o que o original tem: um OBJETIVO (diz o que a pessoa busca: tipo de vaga, área, estágio, primeiro emprego), um RESUMO/PERFIL (diz quem a pessoa é e o que já fez) ou nenhum dos dois.
+- Se for OBJETIVO: mantenha o título "Objetivo". Escreva UMA frase curta dizendo a vaga ou área que a pessoa busca, usando o nome do cargo da vaga, e no máximo 2 ou 3 conhecimentos que ela tem e a vaga pede. Ex: "Estágio em Desenvolvimento Front-end, aplicando HTML, CSS, JavaScript e React."
+- Se for RESUMO: mantenha o título que o original usa (Resumo, Perfil, Sobre mim). Escreva 2 ou 3 frases só com fatos: formação, experiência mais relevante pra vaga e ferramentas que a vaga pede e a pessoa tem.
+- Se não tiver nenhum: crie um "Resumo" de 2 frases, só com fatos do currículo.
+- Nunca apresente a pessoa como se ela já tivesse o cargo da vaga. Estudante continua estudante; quem busca estágio não vira "desenvolvedor júnior atuando em...".
+- Proibido encher linguiça: nada de "contribuindo com boas práticas", "apaixonado por", "proativo", "em constante aprendizado", "agregar valor", a não ser que esteja no original.
 
 Responda SOMENTE com um JSON válido neste formato:
 {

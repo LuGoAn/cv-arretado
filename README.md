@@ -39,7 +39,7 @@ O banco fica em `data/cv-arretado.db` e é criado sozinho na primeira vez.
 1. Login/cadastro simples, senha com hash scrypt e sessão em cookie.
 2. O PDF é lido no servidor com `pdf-parse`. PDF escaneado (imagem) não funciona, aí tem que colar o texto.
 3. O texto do currículo e da vaga vão pra Groq com um prompt de recrutador, pedindo resposta em JSON.
-4. O resultado fica salvo no histórico do usuário. Dá pra ver lado a lado com o original, editar o texto e copiar. No Premium também dá pra baixar em PDF (usa o imprimir do navegador) em 3 modelos.
+4. O resultado fica salvo no histórico do usuário. Dá pra ver lado a lado com o original, editar o texto clicando direto no currículo e copiar. No Premium também dá pra baixar em PDF (usa o imprimir do navegador) em 8 modelos.
 5. Plano grátis tem 1 adaptação por mês. O Premium (R$ 14,90) libera adaptações ilimitadas e carta de apresentação. O checkout é só simulação, não cobra nada nem manda dado de cartão pra lugar nenhum. Dá pra cancelar na página de planos pra voltar pro grátis.
 
 ## Estrutura

@@ -114,32 +114,34 @@
         <div class="erro" id="erro-carta"></div>
 
         <div class="documento">
-          <div class="barra-doc">
-            <div class="abas-doc" role="tablist">
-              <button type="button" class="ativa" data-doc="adaptado" role="tab">Adaptado</button>
-              <button type="button" data-doc="original" role="tab">Original</button>
-              <button type="button" data-doc="lado" role="tab">Lado a lado</button>
+          <div class="escolha-modelo" id="escolha-modelo">
+            <span class="rotulo">Modelo do currículo</span>
+            <div class="galeria" id="galeria" role="radiogroup" aria-label="Modelo do currículo"></div>
+            <p class="legenda-grifo">As miniaturas usam o seu currículo. Os modelos marcados com ATS são os mais seguros pra sistemas de triagem automática.</p>
+          </div>
+
+          <div class="barra-edicao" id="barra-edicao" hidden>
+            <div>
+              <strong>Editando o currículo</strong>
+              <span>Clica em qualquer texto pra mudar. Enter cria um item novo, apagar tudo de um item vazio remove ele.</span>
             </div>
-            <label class="modelo">Modelo do PDF
-              <select id="modelo">
-                <option value="classico">Clássico</option>
-                <option value="moderno">Moderno</option>
-                <option value="compacto">Compacto</option>
-              </select>
-            </label>
-          </div>
-          <div class="docs" id="docs">
-            <article class="folha doc cv original" id="cv-original" data-rotulo="Original" hidden></article>
-            <article class="folha doc cv modelo-classico" id="cv" data-rotulo="Adaptado"></article>
-          </div>
-          <div class="editor folha" id="editor" hidden>
-            <p class="sub">Edita à vontade. Usa <code># Nome</code> pro título, <code>## Seção</code> pras seções e <code>-</code> pros itens.</p>
-            <textarea id="texto-editor" spellcheck="true"></textarea>
             <div class="acoes">
               <button type="button" class="btn" id="salvar-edicao">Salvar</button>
               <button type="button" class="btn secundario" id="cancelar-edicao">Cancelar</button>
             </div>
             <div class="erro" id="erro-edicao"></div>
+          </div>
+
+          <div class="barra-doc" id="barra-doc">
+            <div class="abas-doc" role="tablist">
+              <button type="button" class="ativa" data-doc="adaptado" role="tab">Adaptado</button>
+              <button type="button" data-doc="original" role="tab">Original</button>
+              <button type="button" data-doc="lado" role="tab">Lado a lado</button>
+            </div>
+          </div>
+          <div class="docs" id="docs">
+            <article class="folha doc cv original" id="cv-original" data-rotulo="Original" hidden></article>
+            <article class="folha doc cv modelo-classico" id="cv" data-rotulo="Adaptado"></article>
           </div>
           <p class="legenda-grifo" id="legenda-grifo">Grifado em amarelo: palavras da vaga que aparecem no currículo.</p>
         </div>
@@ -155,8 +157,8 @@
 
   <button type="button" class="btn-exemplo" id="exemplo" title="Preenche com um currículo e uma vaga de teste">Usar exemplo</button>
 
-  <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
   <script src="ui.js"></script>
+  <script src="cv.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
