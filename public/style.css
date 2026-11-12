@@ -170,7 +170,7 @@ textarea { resize: vertical; min-height: 150px; }
   padding: 32px 24px 56px;
 }
 .layout > * { min-width: 0; }
-.cv, .carta, .dicas { overflow-wrap: anywhere; }
+.cv, .dicas { overflow-wrap: anywhere; }
 .cv pre { white-space: pre-wrap; }
 
 .historico h3 { font-size: 1rem; margin: 4px 0 12px; }
@@ -259,7 +259,6 @@ textarea { resize: vertical; min-height: 150px; }
 .cv.original { white-space: pre-wrap; color: #3d424d; }
 .legenda-grifo { font-size: .85rem; color: var(--suave); margin-top: 10px; }
 
-.carta { white-space: pre-wrap; padding: 36px 44px; margin-top: 8px; max-width: 72ch; }
 .cadeado { font-size: .8rem; color: var(--suave); font-weight: 500; }
 
 /* planos */
@@ -354,6 +353,17 @@ textarea { resize: vertical; min-height: 150px; }
 .opcao-modelo.ativa .miniatura { outline-color: var(--grafite); }
 .nome-modelo { font-size: .88rem; font-weight: 650; display: flex; align-items: center; gap: 6px; }
 .opcao-modelo.ativa .nome-modelo { text-decoration: underline; text-decoration-color: var(--grifo); text-decoration-thickness: 4px; text-underline-offset: 2px; }
+/* prévia grande ao passar o mouse, fora da galeria pra não ser cortada pelo overflow */
+.previa-modelo {
+  position: fixed; z-index: 50; width: 380px; height: 538px; overflow: hidden; border-radius: 4px;
+  background: #fff; box-shadow: 0 18px 50px rgba(20, 24, 30, .28), 0 0 0 1px rgba(20, 24, 30, .08);
+  pointer-events: none; opacity: 0; transform: scale(.96); transition: opacity .12s, transform .12s;
+}
+.previa-modelo.on { opacity: 1; transform: none; }
+.previa-modelo > .cv {
+  position: absolute; top: 0; left: 0; width: 760px; min-height: 1075px; padding: 44px 52px;
+  transform: scale(.5); transform-origin: top left; box-shadow: none; border-radius: 0;
+}
 .tag-ats { font-size: .66rem; font-weight: 700; letter-spacing: .04em; color: var(--verde); border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; }
 
 .barra-doc { display: flex; justify-content: space-between; align-items: end; gap: 12px; flex-wrap: wrap; }
@@ -526,7 +536,6 @@ textarea { resize: vertical; min-height: 150px; }
   .notas { justify-content: flex-start; }
   .nota { text-align: left; }
   .cv { padding: 24px 18px; }
-  .carta { padding: 22px 18px; }
   .topo { padding: 12px 16px; }
   .topo .conta { display: none; }
   .topo .btn { padding: 8px 12px; white-space: nowrap; font-size: .92rem; }

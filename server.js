@@ -8,7 +8,7 @@ const pdfParse = require('pdf-parse/lib/pdf-parse.js');
 
 const db = require('./src/db');
 const { hashSenha, conferirSenha } = require('./src/senha');
-const { adaptarCurriculo, gerarCarta } = require('./src/groq');
+const { adaptarCurriculo } = require('./src/groq');
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -165,35 +165,13 @@ app.get('/api/historico/:id', logado, (req, res) => {
     .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
     .get(req.params.id, req.session.userId);
   if (!item) return res.status(404).json({ erro: 'Não achei' });
-  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, carta: item.carta, curriculo_original: item.curriculo_original, ...JSON.parse(item.resultado) });
-});
-
-app.post('/api/historico/:id/carta', logado, async (req, res) => {
-  try {
-    if (statusPlano(req.session.userId).plano !== 'premium') {
-      return res.status(402).json({ erro: 'Carta de apresentação é do plano Premium', codigo: 'premium' });
-    }
-    const item = db
-      .prepare('SELECT * FROM adaptacoes WHERE id = ? AND usuario_id = ? AND apagado = 0')
-      .get(req.params.id, req.session.userId);
-    if (!item) return res.status(404).json({ erro: 'Não achei' });
-
-    // manda o original, que é a fonte dos fatos, pra carta não pegar algo que a adaptação exagerou
-    const carta = await gerarCarta({
-      nome: req.session.nome,
-      cargo: item.cargo,
-      vaga: item.vaga,
-      curriculo: item.curriculo_original,
-    });
-    db.prepare('UPDATE adaptacoes SET carta = ? WHERE id = ?').run(carta, item.id);
-    res.json({ carta });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ erro: e.message || 'Não consegui gerar a carta' });
-  }
+  res.json({ id: item.id, cargo: item.cargo, vaga: item.vaga, curriculo_original: item.curriculo_original, ...JSON.parse(item.resultado) });
 });
 
 app.put('/api/historico/:id', logado, (req, res) => {
+  if (statusPlano(req.session.userId).plano !== 'premium') {
+    return res.status(402).json({ erro: 'Editar o texto é do plano Premium', codigo: 'premium' });
+  }
   const texto = req.body && req.body.curriculo_adaptado;
   if (typeof texto !== 'string' || !texto.trim()) return res.status(400).json({ erro: 'O currículo não pode ficar vazio' });
   if (texto.length > 20000) return res.status(400).json({ erro: 'Texto grande demais' });

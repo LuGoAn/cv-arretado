@@ -31,17 +31,6 @@ Responda SOMENTE com um JSON válido neste formato:
   "dicas": ["dicas práticas do que a pessoa pode estudar ou incluir, se for verdade, para ficar mais forte na vaga"]
 }`;
 
-const PROMPT_CARTA = `Você escreve cartas de apresentação curtas para candidatos a vagas no Brasil.
-Regras:
-- Use SOMENTE fatos que estão escritos no currículo: empresas, cargos, projetos, cursos, ferramentas e resultados.
-- Não invente nada. Isso inclui soft skills, trabalho em equipe, colaboração com outras áreas, números ou conquistas que o currículo não cita.
-- Se a vaga pede algo que não está no currículo, não diga que a pessoa tem. No máximo diga que tem interesse em aprender, uma vez só.
-- Antes de escrever cada frase, confira se ela tem base num trecho do currículo. Se não tiver, corte.
-- 3 ou 4 parágrafos curtos, tom profissional mas humano, sem clichê exagerado.
-- Comece com "Olá, equipe de recrutamento," e termine com "Atenciosamente," e o nome da pessoa.
-- Ligue as experiências da pessoa com o que a vaga pede.
-- Responda só com o texto da carta, sem título e sem markdown.`;
-
 // a groq aposenta modelo sem avisar muito, então tenta em ordem até um funcionar
 const MODELOS_RESERVA = ['openai/gpt-oss-120b', 'llama-3.3-70b-versatile', 'openai/gpt-oss-20b', 'llama-3.1-8b-instant'];
 
@@ -134,15 +123,4 @@ function garantirContatos(md, original) {
   return linhas.join('\n');
 }
 
-async function gerarCarta({ nome, cargo, vaga, curriculo }) {
-  const texto = await perguntarGroq([
-    { role: 'system', content: PROMPT_CARTA },
-    {
-      role: 'user',
-      content: `NOME: ${nome}\nCARGO: ${cargo || 'não informado'}\n\nVAGA:\n${vaga}\n\nCURRÍCULO:\n${curriculo}`,
-    },
-  ], { temperatura: 0.2 });
-  return texto.trim();
-}
-
-module.exports = { adaptarCurriculo, gerarCarta };
+module.exports = { adaptarCurriculo };

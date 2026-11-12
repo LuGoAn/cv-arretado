@@ -27,9 +27,7 @@ async function carregarPlano() {
   $('plano-atual').innerHTML = premium() ? 'Plano <span class="grifo">Premium</span>' : 'Plano grátis';
   $('upgrade').hidden = premium();
   $('baixar').innerHTML = premium() ? 'Baixar em PDF' : 'Baixar em PDF <span class="cadeado">(Premium)</span>';
-  $('btn-carta').innerHTML = premium()
-    ? 'Gerar carta de apresentação'
-    : 'Carta de apresentação <span class="cadeado">(Premium)</span>';
+  $('editar').innerHTML = premium() ? 'Editar texto' : 'Editar texto <span class="cadeado">(Premium)</span>';
 
   const acabou = !premium() && eu.usadas_mes >= eu.limite;
   $('uso').innerHTML = premium()
@@ -123,6 +121,51 @@ $('galeria').addEventListener('click', (e) => {
   });
   renderCv();
 });
+
+const previa = document.createElement('div');
+previa.className = 'previa-modelo';
+previa.setAttribute('aria-hidden', 'true');
+document.body.appendChild(previa);
+let timerPrevia;
+
+function mostrarPrevia(b) {
+  previa.innerHTML = `<div class="folha doc cv modelo-${b.dataset.m}">${renderizarCv(cvDados, b.dataset.m)}</div>`;
+  const r = b.querySelector('.miniatura').getBoundingClientRect();
+  const w = 380, h = 538, m = 12;
+  let left = r.left + r.width / 2 - w / 2;
+  left = Math.max(m, Math.min(left, innerWidth - w - m));
+  // abaixo da miniatura se couber, senão acima, senão do lado
+  let top = r.bottom + m;
+  if (top + h > innerHeight - m) top = r.top - h - m;
+  if (top < m) {
+    top = Math.max(m, Math.min(r.top + r.height / 2 - h / 2, innerHeight - h - m));
+    left = r.right + m + w <= innerWidth - m ? r.right + m : Math.max(m, r.left - w - m);
+  }
+  previa.style.left = left + 'px';
+  previa.style.top = top + 'px';
+  previa.classList.add('on');
+}
+
+function esconderPrevia() {
+  clearTimeout(timerPrevia);
+  previa.classList.remove('on');
+}
+
+// só em quem tem mouse, no celular o toque já escolhe o modelo
+if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  $('galeria').addEventListener('mouseover', (e) => {
+    const b = e.target.closest('[data-m]');
+    if (!b || b.contains(e.relatedTarget)) return;
+    clearTimeout(timerPrevia);
+    timerPrevia = setTimeout(() => mostrarPrevia(b), 180);
+  });
+  $('galeria').addEventListener('mouseout', (e) => {
+    const b = e.target.closest('[data-m]');
+    if (b && !b.contains(e.relatedTarget)) esconderPrevia();
+  });
+  $('galeria').addEventListener('scroll', esconderPrevia);
+  addEventListener('scroll', esconderPrevia, { passive: true });
+}
 
 // edição direto na folha: só os textos são editáveis, a estrutura fica travada
 function lerEdicao() {
@@ -241,7 +284,13 @@ $('cv').addEventListener('click', (e) => {
   focar(`li[data-s="${s}"][data-b="${bi}"][data-i="${secao.blocos[bi].itens.length - 1}"]`, true);
 });
 
-$('editar').addEventListener('click', abrirEditor);
+$('editar').addEventListener('click', () => {
+  if (!premium()) {
+    location.href = '/planos.html';
+    return;
+  }
+  abrirEditor();
+});
 $('cancelar-edicao').addEventListener('click', () => {
   cvDados = backup;
   fecharEditor();
@@ -286,8 +335,6 @@ function mostrar(r) {
   $('cv-original').textContent = r.curriculo_original || '';
   grifar($('cv-original'), chaves());
   trocarDoc('adaptado');
-  $('erro-carta').textContent = '';
-  mostrarCarta(r.carta);
   carregarHistorico();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
@@ -354,11 +401,6 @@ document.querySelectorAll('.abas-doc button').forEach((b) => {
   b.addEventListener('click', () => trocarDoc(b.dataset.doc));
 });
 
-function mostrarCarta(carta) {
-  $('area-carta').hidden = !carta;
-  $('carta').textContent = carta || '';
-}
-
 function novo() {
   atual = null;
   $('resultado').classList.remove('on');
@@ -377,34 +419,6 @@ function etapas(lista) {
   }, 2600);
   return () => clearInterval(t);
 }
-
-$('btn-carta').addEventListener('click', async () => {
-  if (!premium()) {
-    location.href = '/planos.html';
-    return;
-  }
-  const b = $('btn-carta');
-  b.disabled = true;
-  b.textContent = 'Escrevendo a carta...';
-  $('erro-carta').textContent = '';
-  try {
-    const r = await api(`/api/historico/${atual.id}/carta`, { method: 'POST' });
-    atual.carta = r.carta;
-    mostrarCarta(r.carta);
-    $('area-carta').scrollIntoView({ behavior: 'smooth' });
-  } catch (err) {
-    $('erro-carta').textContent = err.message;
-  } finally {
-    b.disabled = false;
-    b.textContent = 'Gerar carta de apresentação';
-  }
-});
-
-$('copiar-carta').addEventListener('click', async () => {
-  await navigator.clipboard.writeText(atual.carta);
-  $('copiar-carta').textContent = 'Copiado!';
-  setTimeout(() => ($('copiar-carta').textContent = 'Copiar carta'), 1500);
-});
 
 $('arquivo').addEventListener('change', () => {
   const f = $('arquivo').files[0];
